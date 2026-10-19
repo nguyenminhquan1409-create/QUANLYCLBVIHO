@@ -9,27 +9,71 @@
     <!-- THƯ VIỆN SHEETJS ĐỂ ĐỌC/XUẤT EXCEL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Tối ưu tốc độ render & Cố định tiêu đề bảng (Sticky Header) */
         table { border-collapse: separate; border-spacing: 0; }
-        .fast-row { contain: content; }
+        .fast-row { contain: layout style; }
+        
+        /* Luôn canh chỉnh ảnh nằm chính giữa khung */
+        .avatar-center {
+            object-fit: cover;
+            object-position: center center;
+        }
+
+        /* Cố định hàng tiêu đề khi cuộn dọc */
         thead th {
             position: sticky;
             top: 0;
             z-index: 20;
             box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.12);
         }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Cố định cột 1 (STT) khi cuộn ngang */
+        .sticky-col-1 {
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            width: 46px;
+            min-width: 46px;
+            max-width: 46px;
+        }
+
+        /* Cố định cột 2 (Hồ sơ Võ sinh) khi cuộn ngang */
+        .sticky-col-2 {
+            position: sticky;
+            left: 46px;
+            z-index: 15;
+            min-width: 265px;
+            max-width: 285px;
+            box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12);
+        }
+
+        thead th.sticky-col-1,
+        thead th.sticky-col-2 {
+            z-index: 35 !important;
+        }
+
+        tbody tr.bg-white .sticky-col-1,
+        tbody tr.bg-white .sticky-col-2 { background-color: #ffffff; }
+        tbody tr.bg-red-100 .sticky-col-1,
+        tbody tr.bg-red-100 .sticky-col-2 { background-color: #fee2e2; }
+        tbody tr:hover .sticky-col-1,
+        tbody tr:hover .sticky-col-2 { background-color: #f9fafb; }
+        tbody tr.bg-red-100:hover .sticky-col-1,
+        tbody tr.bg-red-100:hover .sticky-col-2 { background-color: #fecaca; }
     </style>
 </head>
 <body class="bg-gray-50 h-screen w-screen overflow-hidden flex flex-col relative m-0 p-0">
+
+    <!-- INPUT ẨN ĐỂ UPLOAD LOGO CLB -->
+    <input type="file" id="logoUploadInput" accept="image/*" class="hidden" onchange="window.handleLogoChange(event)">
+    <!-- INPUT ẨN ĐỂ HLV CHỤP/TẢI ẢNH VÕ SINH TRỰC TIẾP TRÊN ĐIỆN THOẠI -->
+    <input type="file" id="quickPhotoInput" accept="image/*" class="hidden" onchange="window.handleQuickPhotoSelected(event)">
 
     <!-- ================= GIAO DIỆN ĐĂNG NHẬP (OVERLAY) ================= -->
     <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-red-700 via-red-600 to-gray-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
             <div class="bg-gray-900 p-6 text-center text-white border-b-4 border-red-600">
                 <div class="flex justify-center mb-3">
-                    <img src="LOGO 2.jpg" alt="Logo Vĩ Hồ" onerror="this.onerror=null; this.src=window.fallbackLogo" class="h-20 w-auto object-contain">
+                    <img id="loginLogoImg" src="" alt="Logo Vĩ Hồ" class="h-24 w-auto object-contain mx-auto">
                 </div>
                 <h1 class="text-2xl font-extrabold uppercase tracking-wider text-red-500">Taekwondo Vĩ Hồ</h1>
                 <p class="text-gray-300 text-xs mt-1">Hệ thống Quản lý Điểm danh & Học phí</p>
@@ -65,7 +109,7 @@
 
                 <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5 text-center font-medium"></div>
 
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200">
+                <button type="submit" id="btnSubmitLogin" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200">
                     ĐĂNG NHẬP HỆ THỐNG
                 </button>
             </form>
@@ -76,7 +120,7 @@
     <header class="bg-white shadow-sm border-b border-red-600 w-full flex-shrink-0">
         <div class="w-full px-4 sm:px-6 flex justify-between items-center h-16">
             <div class="flex items-center gap-3">
-                <img src="LOGO 2.jpg" alt="Logo Vĩ Hồ" onerror="this.onerror=null; this.src=window.fallbackLogo" class="h-12 w-auto object-contain">
+                <img id="headerLogoImg" src="" onclick="document.getElementById('logoUploadInput').click()" title="Bấm vào đây để đổi/lưu Logo CLB vĩnh viễn lên Web" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain cursor-pointer">
                 <div class="font-extrabold text-xl sm:text-2xl text-red-600 tracking-wide">TAEKWONDO VĨ HỒ</div>
             </div>
             <div class="flex items-center gap-4">
@@ -111,7 +155,7 @@
         </div>
     </div>
 
-    <!-- ================= NỘI DUNG CHÍNH (KHUNG CUỘN RIÊNG CHO TỪNG BẢNG ĐỂ GIỮ CỐ ĐỊNH TIÊU ĐỀ) ================= -->
+    <!-- ================= NỘI DUNG CHÍNH ================= -->
     <main class="flex-1 w-full px-4 sm:px-6 py-3 overflow-hidden flex flex-col min-h-0">
         
         <!-- ================= TAB 1: ĐIỂM DANH (HLV) ================= -->
@@ -123,9 +167,9 @@
                 </div>
                 
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="window.toggleModal('excelModal', 'open')" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel</button>
-                    <button onclick="toggleModal('addStudentModal', 'open')" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
+                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
+                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
 
@@ -160,13 +204,12 @@
                 </div>
             </div>
 
-            <!-- KHUNG BẢNG CÓ STICKY HEADER -->
             <div class="bg-white shadow rounded-lg overflow-auto flex-1 min-h-0 w-full border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-red-50">
                         <tr>
-                            <th class="bg-red-50 px-3 py-3 text-center text-xs font-bold text-red-700 uppercase w-12 border-b border-red-200">STT</th>
-                            <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Hồ sơ Võ sinh</th>
+                            <th class="sticky-col-1 bg-red-50 px-2 py-3 text-center text-xs font-bold text-red-700 uppercase border-b border-red-200">STT</th>
+                            <th class="sticky-col-2 bg-red-50 px-3 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Hồ sơ Võ sinh (Bấm ảnh phóng to)</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Cấp Đai</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Trạng thái</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Thi cấp</th>
@@ -188,21 +231,19 @@
                     <input type="month" id="accMonth" class="border-none bg-gray-50 rounded px-2 py-1 text-sm font-bold text-green-700 outline-none cursor-pointer" onchange="renderTuitionTable()">
                 </div>
                 
-                <!-- KẾ TOÁN CŨNG CÓ NÚT THÊM VÕ SINH ĐỂ NOTE HỌC PHÍ KHI HLV/ADMIN CHƯA KỊP THÊM -->
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="window.toggleModal('excelModal', 'open')" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel</button>
-                    <button onclick="toggleModal('addStudentModal', 'open')" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
+                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Kế Toán (12 Tháng)</button>
+                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-yellow-600 shadow-sm">📤 Tải / Xuất Excel Kế Toán (12 Tháng)</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
             
-            <!-- KHUNG BẢNG CÓ STICKY HEADER -->
             <div class="bg-white shadow rounded-lg overflow-auto flex-1 min-h-0 w-full border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-green-50">
                         <tr id="tuitionHeaderRow">
-                            <th class="bg-green-50 px-2 py-3 text-center text-xs font-bold text-green-800 uppercase align-top w-12 border-b border-green-200">STT</th>
-                            <th class="bg-green-50 px-4 py-3 text-left text-xs font-bold text-green-800 uppercase border-l border-b border-green-200 align-top" style="min-width: 230px;">
+                            <th class="sticky-col-1 bg-green-50 px-2 py-3 text-center text-xs font-bold text-green-800 uppercase align-top border-b border-green-200">STT</th>
+                            <th class="sticky-col-2 bg-green-50 px-3 py-3 text-left text-xs font-bold text-green-800 uppercase border-l border-b border-green-200 align-top">
                                 <div class="mb-2">Hồ sơ Võ sinh</div>
                                 <input type="text" id="searchProfile" oninput="window.debouncedRender('hocphi')" placeholder="🔍 Tìm Họ tên (có/không dấu)..." class="w-full font-normal border border-green-400 rounded px-2.5 py-1.5 text-xs focus:border-green-600 outline-none bg-white">
                             </th>
@@ -228,9 +269,9 @@
                     <div class="w-full sm:w-64">
                         <input type="text" id="searchAdminName" oninput="window.debouncedRender('admin')" placeholder="🔍 Tìm Họ và Tên (có/không dấu)..." class="w-full border border-blue-400 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-600 shadow-sm bg-white">
                     </div>
-                    <button onclick="window.toggleModal('excelModal', 'open')" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel</button>
-                    <button onclick="toggleModal('addStudentModal', 'open')" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
+                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
+                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12 Tháng)</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                     <div class="flex items-center gap-2 bg-white p-1.5 rounded-lg shadow-sm border">
                         <h2 class="text-sm font-bold text-gray-800 whitespace-nowrap pl-1">Tháng:</h2>
                         <input type="month" id="adminMonth" class="border-none bg-gray-50 rounded px-2 py-1 text-sm font-bold text-blue-600 outline-none cursor-pointer" onchange="renderAdminTable()">
@@ -238,13 +279,12 @@
                 </div>
             </div>
             
-            <!-- KHUNG BẢNG CÓ STICKY HEADER -->
             <div class="bg-white shadow rounded-lg overflow-auto flex-1 min-h-0 w-full border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-800 text-white">
                         <tr>
-                            <th class="bg-gray-800 px-3 py-3 text-center text-xs font-bold uppercase w-12">STT</th>
-                            <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Hồ sơ Võ sinh</th>
+                            <th class="sticky-col-1 bg-gray-800 px-2 py-3 text-center text-xs font-bold uppercase">STT</th>
+                            <th class="sticky-col-2 bg-gray-800 px-3 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Hồ sơ Võ sinh</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Chuyên môn & Liên hệ</th>
                             <th class="bg-gray-800 px-4 py-3 text-center text-xs font-bold uppercase border-l border-gray-600 text-yellow-300">Tổng kết tháng</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600 text-red-300" style="min-width: 250px;">Học phí (Tháng chưa đóng)</th>
@@ -257,7 +297,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 4: CẤP QUYỀN ĐĂNG NHẬP (TAB RIÊNG CHO ADMIN) ================= -->
+        <!-- ================= TAB 4: CẤP QUYỀN ĐĂNG NHẬP ================= -->
         <div id="accounts" class="tab-content hidden w-full h-full flex flex-col min-h-0">
             <div class="bg-white p-5 shadow rounded-lg border-t-4 border-red-600 w-full max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
                 <div class="flex-shrink-0">
@@ -320,8 +360,8 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-800 text-white">
                         <tr>
-                            <th class="bg-gray-800 px-3 py-3 text-center text-xs font-bold uppercase w-12">STT</th>
-                            <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Hồ sơ Võ sinh</th>
+                            <th class="sticky-col-1 bg-gray-800 px-2 py-3 text-center text-xs font-bold uppercase">STT</th>
+                            <th class="sticky-col-2 bg-gray-800 px-3 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Hồ sơ Võ sinh</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Chuyên môn & Liên hệ</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Thông tin xóa</th>
                             <th class="bg-gray-800 px-4 py-3 text-center text-xs font-bold uppercase border-l border-gray-600">Thao tác (Khôi phục / Xóa hẳn)</th>
@@ -334,34 +374,101 @@
 
     </main>
 
-    <!-- ================= MODAL: NHẬP EXCEL ================= -->
-    <div id="excelModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="relative mx-auto p-6 border w-full max-w-sm shadow-xl rounded-xl bg-white m-4">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-lg font-bold text-green-600">Nhập danh sách từ Excel</h3>
-                <button onclick="window.toggleModal('excelModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    <!-- ================= MODAL: PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH (CÓ NÚT XÓA ẢNH) ================= -->
+    <div id="photoPreviewModal" onclick="if(event.target === this) window.toggleModal('photoPreviewModal', 'close')" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative mx-auto border w-full max-w-md shadow-2xl rounded-2xl bg-white overflow-hidden">
+            <div class="bg-red-600 px-5 py-3.5 flex justify-between items-center text-white">
+                <h3 class="text-base font-extrabold uppercase tracking-wider">🥋 Thẻ Hồ Sơ Võ Sinh</h3>
+                <button onclick="window.toggleModal('photoPreviewModal', 'close')" class="text-white hover:text-gray-200 text-2xl font-bold leading-none">&times;</button>
             </div>
-            <div class="space-y-4 text-center mt-4">
-                <p class="text-sm text-gray-600 text-left mb-2">Bước 1: Tải file mẫu về và nhập dữ liệu (Chỉ bắt buộc cột Họ và tên, các cột khác có thể để trống).</p>
-                <button onclick="window.downloadTemplate()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-md font-bold hover:bg-blue-100">📥 1. Tải File Excel Mẫu</button>
-                <hr class="my-4">
-                <p class="text-sm text-gray-600 text-left mb-2">Bước 2: Chọn file đã điền để cập nhật vào hệ thống.</p>
-                <div class="relative">
-                    <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="window.handleExcelUpload(event)">
-                    <button onclick="document.getElementById('excelFileInput').click()" class="w-full bg-green-600 text-white py-2 rounded-md font-bold hover:bg-green-700 shadow-sm">📤 2. Upload File Đã Nhập</button>
+
+            <div class="p-5 flex flex-col items-center">
+                <!-- Khung ảnh phóng to luôn nằm chính giữa -->
+                <div class="w-60 h-60 sm:w-64 sm:h-64 rounded-xl overflow-hidden border-4 border-red-500 shadow-lg bg-gray-100 flex items-center justify-center mb-4">
+                    <img id="previewModalImg" src="" alt="Ảnh võ sinh" class="w-full h-full avatar-center">
+                </div>
+
+                <!-- Bộ nút Chụp/Đổi ảnh & Xóa ảnh nếu tải sai -->
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <button id="previewChangePhotoBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-full shadow transition flex items-center gap-1.5">
+                        📷 Chụp / Đổi ảnh
+                    </button>
+                    <button id="previewDeletePhotoBtn" class="hidden bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 text-xs font-bold px-4 py-2 rounded-full shadow-sm transition flex items-center gap-1">
+                        🗑️ Xóa ảnh
+                    </button>
+                </div>
+
+                <!-- Thông tin chi tiết của võ sinh -->
+                <div class="w-full bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2 text-sm">
+                    <div class="text-center border-b pb-2 mb-2">
+                        <div id="previewModalName" class="text-lg font-extrabold text-gray-900 uppercase"></div>
+                        <div id="previewModalBeltClub" class="text-xs font-bold text-blue-600 mt-0.5"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-gray-500">Giới tính:</span> <b id="previewModalGender" class="text-gray-800"></b></div>
+                        <div><span class="text-gray-500">Ngày sinh:</span> <b id="previewModalDOB" class="text-gray-800"></b></div>
+                        <div><span class="text-gray-500">Nhập học:</span> <b id="previewModalStart" class="text-green-700"></b></div>
+                        <div><span class="text-gray-500">Trạng thái:</span> <b id="previewModalStatus" class="text-gray-800"></b></div>
+                    </div>
+                    <div class="border-t pt-2 text-xs space-y-1">
+                        <div><span class="text-gray-500">Phụ huynh:</span> <b id="previewModalParent" class="text-gray-800"></b></div>
+                        <div><span class="text-gray-500">Số điện thoại:</span> <b id="previewModalPhone" class="text-red-600 text-sm"></b></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= MODAL: CHỈNH SỬA HỒ SƠ ================= -->
+    <!-- ================= MODAL: NHẬP EXCEL ================= -->
+    <div id="excelModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-xl bg-white m-4">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-bold text-green-700">📥 Nhập / Cập nhật từ Excel</h3>
+                <button onclick="window.toggleModal('excelModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-4 mt-3">
+                <div class="bg-green-50 p-3.5 rounded-lg border border-green-200">
+                    <p class="text-xs font-bold text-green-800 mb-1.5">Bước 1: Tải File Mẫu Kế Toán (Có sẵn danh sách võ sinh)</p>
+                    <p class="text-xs text-gray-600 mb-3">File tải về sẽ có <b>đầy đủ thông tin võ sinh hiện có trên web</b> + 12 Tháng + 4 Kỳ Thi. Những tháng <b>Đã đóng</b> được giữ nguyên, những tháng <b>Chưa đóng</b> sẽ để trống để bạn nhập bổ sung.</p>
+                    <button onclick="window.downloadAccountingTemplate()" class="w-full bg-green-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">
+                        📥 1. Tải File Mẫu Kế Toán (Đủ Danh Sách + 12 Tháng)
+                    </button>
+                </div>
+                
+                <div class="bg-gray-50 p-3.5 rounded-lg border border-gray-200">
+                    <p class="text-xs font-bold text-gray-800 mb-1">Bước 2: Upload File Đã Điền Lên Web</p>
+                    <p class="text-xs text-gray-500 mb-3">Điền số tiền (VD: <b>500.000</b>) vào các ô trống của tháng đã đóng rồi tải file lên, hệ thống sẽ cập nhật tự động.</p>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="window.handleExcelUpload(event)">
+                    <button onclick="document.getElementById('excelFileInput').click()" class="w-full bg-blue-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">
+                        📤 2. Chọn File Excel Tải Lên Hệ Thống
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: CHỈNH SỬA HỒ SƠ (CÓ XÓA ẢNH & CANH GIỮA) ================= -->
     <div id="editStudentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white m-4">
-            <div class="flex justify-between items-center mb-5 border-b pb-3">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
                 <h3 class="text-xl font-bold text-blue-600">Chỉnh sửa hồ sơ Võ sinh</h3>
                 <button type="button" onclick="toggleModal('editStudentModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
-            <form id="editStudentForm" class="space-y-4">
+            <form id="editStudentForm" class="space-y-3.5">
+                <!-- Khu vực chụp/tải/xóa ảnh trong Modal Sửa -->
+                <div class="flex items-center gap-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <img id="editPhotoPreview" src="" alt="Avatar" class="w-16 h-16 rounded-lg avatar-center border-2 border-white shadow bg-gray-200 flex-shrink-0">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-blue-800">📷 Ảnh chân dung (Tự canh giữa)</label>
+                            <button type="button" id="btnClearEditPhoto" onclick="window.clearModalPhoto('edit')" class="hidden text-xs font-bold text-red-600 hover:text-red-800 bg-red-100 px-2 py-0.5 rounded border border-red-200">
+                                🗑️ Xóa ảnh
+                            </button>
+                        </div>
+                        <input type="file" id="editPhotoInput" accept="image/*" class="text-xs w-full" onchange="window.handleModalPhotoPreview(event, 'edit')">
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên <span class="text-red-500">*</span> (Tự động IN HOA)</label>
                     <input type="text" id="editName" oninput="this.value = this.value.toUpperCase()" class="w-full border border-gray-300 rounded-md p-2 focus:border-blue-500 uppercase font-bold" required>
@@ -375,14 +482,14 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Ngày sinh (Có thể bổ sung sau)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ngày sinh</label>
                         <input type="date" id="editDOB" class="w-full border border-gray-300 rounded-md p-2">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tên Phụ huynh</label>
-                        <input type="text" id="editParentName" placeholder="Có thể bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
+                        <input type="text" id="editParentName" placeholder="Bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
@@ -399,7 +506,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Câu lạc bộ</label>
-                        <input type="text" id="editClub" placeholder="Có thể bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
+                        <input type="text" id="editClub" placeholder="Bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -409,10 +516,10 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">SĐT Phụ huynh</label>
-                        <input type="tel" id="editPhone" placeholder="Có thể bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
+                        <input type="tel" id="editPhone" placeholder="Bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <div class="flex justify-end gap-3 mt-5 pt-3 border-t">
                     <button type="button" onclick="toggleModal('editStudentModal', 'close')" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium">Hủy</button>
                     <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-md font-medium shadow-md">Cập nhật hồ sơ</button>
                 </div>
@@ -439,17 +546,31 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: THÊM VÕ SINH MỚI ================= -->
+    <!-- ================= MODAL: THÊM VÕ SINH MỚI (CÓ XÓA ẢNH & CANH GIỮA) ================= -->
     <div id="addStudentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white m-4">
             <div class="flex justify-between items-center mb-3 border-b pb-3">
                 <div>
                     <h3 class="text-xl font-bold text-red-600">Thêm Võ Sinh Mới</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Chỉ bắt buộc Họ và Tên, các mục khác có thể bỏ trống để bổ sung sau.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Chỉ bắt buộc Họ và Tên, các mục khác có thể bổ sung sau.</p>
                 </div>
                 <button type="button" onclick="toggleModal('addStudentModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
-            <form id="addStudentForm" class="space-y-4">
+            <form id="addStudentForm" class="space-y-3.5">
+                <!-- Khu vực chụp/tải/xóa ảnh khi Thêm mới -->
+                <div class="flex items-center gap-4 bg-red-50 p-3 rounded-lg border border-red-200">
+                    <img id="inpPhotoPreview" src="" alt="Avatar" class="w-16 h-16 rounded-lg avatar-center border-2 border-white shadow bg-gray-200 flex-shrink-0">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-red-800">📷 Ảnh Võ sinh (Tự canh giữa)</label>
+                            <button type="button" id="btnClearAddPhoto" onclick="window.clearModalPhoto('add')" class="hidden text-xs font-bold text-red-600 hover:text-red-800 bg-white px-2 py-0.5 rounded border border-red-300">
+                                🗑️ Xóa ảnh
+                            </button>
+                        </div>
+                        <input type="file" id="inpPhotoInput" accept="image/*" class="text-xs w-full" onchange="window.handleModalPhotoPreview(event, 'add')">
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên Võ sinh <span class="text-red-500">*</span> (Tự động viết IN HOA)</label>
                     <input type="text" id="inpName" oninput="this.value = this.value.toUpperCase()" placeholder="VD: NGUYỄN VĂN A" class="w-full border border-gray-300 rounded-md p-2 uppercase font-bold focus:border-red-500 outline-none" required>
@@ -500,7 +621,7 @@
                         <input type="tel" id="inpPhone" placeholder="Bổ sung sau..." class="w-full border border-gray-300 rounded-md p-2">
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <div class="flex justify-end gap-3 mt-5 pt-3 border-t">
                     <button type="button" onclick="toggleModal('addStudentModal', 'close')" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium">Hủy</button>
                     <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded-md font-medium shadow-md">Lưu võ sinh</button>
                 </div>
@@ -508,17 +629,39 @@
         </div>
     </div>
 
-    <!-- ================= JAVASCRIPT ĐÃ ĐƯỢC LÀM SẠCH & TỐI ƯU ================= -->
+    <!-- ================= JAVASCRIPT ĐÃ TỐI ƯU HÓA ================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        window.fallbackLogo = "data:image/svg+xml;utf8," + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240">
-            <polygon points="100,10 185,45 170,175 100,230 30,175 15,45" fill="#111" stroke="#ea580c" stroke-width="8"/>
-            <path d="M100,25 C125,55 155,70 160,110 C135,105 120,115 100,135 C80,115 65,105 40,110 C45,70 75,55 100,25 Z" fill="#ea580c"/>
-            <text x="100" y="160" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle">VĨ HỒ</text>
-            <text x="100" y="185" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#f97316" text-anchor="middle">TAEKWONDO</text>
+        // LOGO VECTOR CÁO VĨ HỒ TAEKWONDO NHÚNG TRỰC TIẾP
+        const embeddedFoxLogo = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350">
+            <defs>
+                <linearGradient id="foxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff6b00"/>
+                    <stop offset="100%" stop-color="#d93800"/>
+                </linearGradient>
+            </defs>
+            <polygon points="150,12 275,65 255,250 150,335 45,250 25,65" fill="#0f0f0f" stroke="#a3a3a3" stroke-width="8"/>
+            <polygon points="150,26 260,73 242,240 150,315 58,240 40,73" fill="#0a0a0a" stroke="url(#foxGrad)" stroke-width="6"/>
+            <path d="M115,95 L135,20 L165,75 L195,15 L185,90 L245,120 L175,145 L145,125 L125,165 L95,130 Z" fill="url(#foxGrad)"/>
+            <polygon points="168,95 190,102 173,107" fill="#ffffff"/>
+            <path d="M135,125 L180,122 L225,125 L165,152 L145,175 L125,145 Z" fill="#ffffff"/>
+            <path d="M65,245 C85,310 175,325 235,285 C205,270 175,260 135,265 C100,270 80,255 65,245 Z" fill="url(#foxGrad)"/>
+            <path d="M180,272 C200,275 218,280 232,285 C210,295 188,295 170,285 Z" fill="#ffffff"/>
+            <rect x="20" y="168" width="260" height="82" rx="10" fill="#0a0a0a" stroke="#a3a3a3" stroke-width="4"/>
+            <text x="150" y="213" font-family="Arial Black, Impact, sans-serif" font-size="44" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">VĨ HỒ</text>
+            <text x="150" y="240" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">TAEKWONDO</text>
+        </svg>`);
+
+        // ẢNH ĐẠI DIỆN MẶC ĐỊNH CHO VÕ SINH CHƯA CÓ ẢNH (CŨNG ĐƯỢC CANH GIỮA)
+        const defaultAvatarSVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+            <rect width="120" height="120" fill="#f3f4f6"/>
+            <circle cx="60" cy="42" r="22" fill="#d1d5db"/>
+            <path d="M20,108 C20,82 40,70 60,70 C80,70 100,82 100,108 Z" fill="#9ca3af"/>
+            <path d="M44,72 L60,96 L76,72" fill="none" stroke="#ef4444" stroke-width="5"/>
         </svg>`);
 
         const firebaseConfig = {
@@ -538,7 +681,10 @@
         let activeTabId = 'diemdanh';
         const beltLevels = ["Cấp 10", "Cấp 9", "Cấp 8", "Cấp 7", "Cấp 6", "Cấp 5", "Cấp 4", "Cấp 3", "Cấp 2", "Cấp 1", "1 Đẳng", "2 Đẳng", "3 Đẳng", "4 Đẳng", "5 Đẳng", "6 Đẳng"];
         let currentEditingStudentIdx = null;
-        let adminEditingStudentIdx = null; 
+        let adminEditingStudentIdx = null;
+        let quickPhotoTargetIdx = null;
+        let tempAddPhotoBase64 = "";
+        let tempEditPhotoBase64 = "";
 
         let accounts = [];
         let students = [];
@@ -549,8 +695,219 @@
         let searchDebounceTimer = null;
         let skipNextFirebaseRender = false;
 
-        // --- CÁC HÀM TIỆN ÍCH DÙNG CHUNG (KHÔNG TRÙNG LẶP) ---
-        const formatMoney = (num) => Number(num || 0).toLocaleString('vi-VN') + 'đ';
+        // --- XỬ LÝ LOGO CLB ---
+        function applyLogoToDOM(logoSrc) {
+            const srcToUse = logoSrc || embeddedFoxLogo;
+            const hLogo = document.getElementById('headerLogoImg');
+            const lLogo = document.getElementById('loginLogoImg');
+            if (hLogo) hLogo.src = srcToUse;
+            if (lLogo) lLogo.src = srcToUse;
+        }
+        applyLogoToDOM(localStorage.getItem('clubLogoBase64'));
+
+        window.handleLogoChange = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxH = 180;
+                    const scale = maxH / img.height;
+                    canvas.height = maxH;
+                    canvas.width = img.width * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const base64Data = canvas.toDataURL('image/png', 0.9);
+                    localStorage.setItem('clubLogoBase64', base64Data);
+                    set(ref(db, 'clubLogo'), base64Data);
+                    applyLogoToDOM(base64Data);
+                    alert("Đã lưu Logo CLB lên hệ thống Web thành công!");
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        onValue(ref(db, 'clubLogo'), (snapshot) => {
+            if (snapshot.exists() && snapshot.val()) {
+                localStorage.setItem('clubLogoBase64', snapshot.val());
+                applyLogoToDOM(snapshot.val());
+            }
+        });
+
+        // --- HÀM CẮT VUÔNG TỰ ĐỘNG CANH GIỮA (CENTER-CROP 1:1) & NÉN ẢNH CHÂN DUNG VÕ SINH ---
+        function compressImageFile(file, targetSize, quality, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetSize;
+                    canvas.height = targetSize;
+                    const ctx = canvas.getContext('2d');
+
+                    // Tự động lấy phần vuông ngay chính giữa bức ảnh gốc (dù chụp dọc hay ngang)
+                    const minSide = Math.min(img.width, img.height);
+                    const startX = (img.width - minSide) / 2;
+                    const startY = (img.height - minSide) / 2;
+
+                    ctx.drawImage(img, startX, startY, minSide, minSide, 0, 0, targetSize, targetSize);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                    callback(compressedBase64);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // CHỤP / CẬP NHẬT NHANH ẢNH VÕ SINH
+        window.triggerQuickPhotoUpload = function(studentIdx) {
+            quickPhotoTargetIdx = studentIdx;
+            const input = document.getElementById('quickPhotoInput');
+            input.value = "";
+            input.click();
+        };
+
+        window.handleQuickPhotoSelected = function(event) {
+            const file = event.target.files[0];
+            if (!file || quickPhotoTargetIdx === null || !students[quickPhotoTargetIdx]) return;
+            const targetIdx = quickPhotoTargetIdx;
+
+            compressImageFile(file, 360, 0.8, (base64Data) => {
+                students[targetIdx].photo = base64Data;
+                students[targetIdx].lastEditedBy = currentUser;
+
+                // Cập nhật ảnh và hiện nút xóa nhanh trên bảng
+                const thumbImg = document.getElementById(`student-avatar-${targetIdx}`);
+                if (thumbImg) thumbImg.src = base64Data;
+                const delBadge = document.getElementById(`del-photo-badge-${targetIdx}`);
+                if (delBadge) delBadge.classList.remove('hidden');
+
+                // Nếu đang mở Modal phóng to thì cập nhật luôn ảnh & hiện nút Xóa ảnh
+                const previewModal = document.getElementById('photoPreviewModal');
+                if (previewModal && !previewModal.classList.contains('hidden')) {
+                    document.getElementById('previewModalImg').src = base64Data;
+                    const delBtn = document.getElementById('previewDeletePhotoBtn');
+                    if (delBtn) delBtn.classList.remove('hidden');
+                }
+
+                saveSingleStudent(targetIdx, true);
+            });
+        };
+
+        // XÓA ẢNH VÕ SINH NẾU TẢI SAI (TRỰC TIẾP TỪ BẢNG HOẶC TỪ MODAL PHÓNG TO)
+        window.removeStudentPhoto = function(studentIdx, ev) {
+            if (ev) ev.stopPropagation();
+            const st = students[studentIdx];
+            if (!st || !st.photo) return;
+
+            if (confirm(`Bạn có chắc muốn xóa ảnh của võ sinh "${st.name}" không?`)) {
+                st.photo = "";
+                st.lastEditedBy = currentUser;
+
+                const thumbImg = document.getElementById(`student-avatar-${studentIdx}`);
+                if (thumbImg) thumbImg.src = defaultAvatarSVG;
+                const delBadge = document.getElementById(`del-photo-badge-${studentIdx}`);
+                if (delBadge) delBadge.classList.add('hidden');
+
+                const previewModal = document.getElementById('photoPreviewModal');
+                if (previewModal && !previewModal.classList.contains('hidden')) {
+                    document.getElementById('previewModalImg').src = defaultAvatarSVG;
+                    const delBtn = document.getElementById('previewDeletePhotoBtn');
+                    if (delBtn) delBtn.classList.add('hidden');
+                }
+
+                saveSingleStudent(studentIdx, true);
+            }
+        };
+
+        // XỬ LÝ XEM TRƯỚC & XÓA ẢNH TRONG MODAL THÊM / SỬA HỒ SƠ
+        window.handleModalPhotoPreview = function(event, mode) {
+            const file = event.target.files[0];
+            if (!file) return;
+            compressImageFile(file, 360, 0.8, (base64Data) => {
+                if (mode === 'add') {
+                    tempAddPhotoBase64 = base64Data;
+                    document.getElementById('inpPhotoPreview').src = base64Data;
+                    document.getElementById('btnClearAddPhoto').classList.remove('hidden');
+                } else {
+                    tempEditPhotoBase64 = base64Data;
+                    document.getElementById('editPhotoPreview').src = base64Data;
+                    document.getElementById('btnClearEditPhoto').classList.remove('hidden');
+                }
+            });
+        };
+
+        window.clearModalPhoto = function(mode) {
+            if (mode === 'add') {
+                tempAddPhotoBase64 = "";
+                document.getElementById('inpPhotoPreview').src = defaultAvatarSVG;
+                document.getElementById('inpPhotoInput').value = "";
+                document.getElementById('btnClearAddPhoto').classList.add('hidden');
+            } else {
+                tempEditPhotoBase64 = "";
+                document.getElementById('editPhotoPreview').src = defaultAvatarSVG;
+                document.getElementById('editPhotoInput').value = "";
+                document.getElementById('btnClearEditPhoto').classList.add('hidden');
+            }
+        };
+
+        // MỞ MODAL PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH
+        window.openPhotoPreviewModal = function(studentIdx, isTrash = false) {
+            const st = isTrash ? deletedStudents[studentIdx] : students[studentIdx];
+            if (!st) return;
+
+            document.getElementById('previewModalImg').src = st.photo || defaultAvatarSVG;
+            document.getElementById('previewModalName').innerText = st.name || 'CHƯA RÕ TÊN';
+            document.getElementById('previewModalBeltClub').innerText = `${st.belt || 'Cấp 10'}  •  CLB: ${st.club || 'Chưa phân CLB'}`;
+            document.getElementById('previewModalGender').innerText = st.gender || 'Nam';
+            document.getElementById('previewModalDOB').innerText = formatDate(st.dob);
+            document.getElementById('previewModalStart').innerText = formatDate(st.startDate);
+            document.getElementById('previewModalStatus').innerText = getLatestStatus(st);
+            document.getElementById('previewModalParent').innerText = `${st.parentName || 'Chưa cập nhật'} (${st.parentRole || '...'})`;
+            document.getElementById('previewModalPhone').innerText = st.phone || 'Chưa có';
+
+            const changeBtn = document.getElementById('previewChangePhotoBtn');
+            const deleteBtn = document.getElementById('previewDeletePhotoBtn');
+
+            if (isTrash) {
+                changeBtn.classList.add('hidden');
+                deleteBtn.classList.add('hidden');
+            } else {
+                changeBtn.classList.remove('hidden');
+                changeBtn.onclick = () => window.triggerQuickPhotoUpload(studentIdx);
+
+                if (st.photo) {
+                    deleteBtn.classList.remove('hidden');
+                } else {
+                    deleteBtn.classList.add('hidden');
+                }
+                deleteBtn.onclick = (e) => window.removeStudentPhoto(studentIdx, e);
+            }
+
+            window.toggleModal('photoPreviewModal', 'open');
+        };
+
+        // --- CÁC HÀM ĐỊNH DẠNG SỐ TIỀN CÓ DẤU PHÂN CÁCH (500.000) ---
+        function parseRawNumber(val) {
+            if (val === undefined || val === null) return 0;
+            const digits = val.toString().replace(/\D/g, '');
+            return digits ? parseInt(digits, 10) : 0;
+        }
+
+        function formatNumberInput(val) {
+            const num = parseRawNumber(val);
+            return num === 0 && val === "" ? "" : num.toLocaleString('vi-VN');
+        }
+
+        const formatMoney = (num) => parseRawNumber(num).toLocaleString('vi-VN') + 'đ';
+
+        window.formatCurrencyLive = function(inputEl) {
+            const digits = inputEl.value.replace(/\D/g, '');
+            inputEl.value = digits ? parseInt(digits, 10).toLocaleString('vi-VN') : '';
+        };
 
         function formatDate(dateStr) {
             if (!dateStr) return 'Chưa cập nhật';
@@ -569,17 +926,48 @@
             return parts[parts.length - 1];
         }
 
-        // HÀM DÙNG CHUNG RENDER THÔNG TIN HỒ SƠ & LIÊN HỆ VÕ SINH (TRÁNH LẶP CODE Ở 4 BẢNG)
-        function renderStudentProfileBox(student, editIndex = null) {
-            const editBtn = editIndex !== null ? `
-                <button onclick="window.openEditStudentModal(${editIndex})" class="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition">
-                    ✏️ Sửa / Bổ sung
+        // RENDER HỒ SƠ VÕ SINH KÈM ẢNH ĐẠI DIỆN CANH GIỮA + NÚT XÓA NHANH TRÊN ẢNH NẾU TẢI SAI
+        function renderStudentProfileBox(student, editIndex = null, extraClubContact = false, isTrash = false, trashIdx = 0) {
+            const hasPhoto = Boolean(student.photo);
+            const avatarSrc = hasPhoto ? student.photo : defaultAvatarSVG;
+            const previewIdx = isTrash ? trashIdx : editIndex;
+            const clickPreviewAttr = previewIdx !== null ? `onclick="window.openPhotoPreviewModal(${previewIdx}, ${isTrash})"` : '';
+
+            // Nút dấu X nhỏ trên góc ảnh để xóa nhanh nếu tải sai
+            const quickDeleteBadge = editIndex !== null ? `
+                <button id="del-photo-badge-${editIndex}" onclick="window.removeStudentPhoto(${editIndex}, event)" title="Xóa ảnh này" class="${hasPhoto ? '' : 'hidden'} absolute -top-1.5 -right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold shadow">
+                    &times;
                 </button>` : '';
+
+            const actionBtns = editIndex !== null ? `
+                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                    <button onclick="window.triggerQuickPhotoUpload(${editIndex})" title="Chụp hoặc tải ảnh võ sinh" class="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded border border-red-200 transition">
+                        📷 Ảnh
+                    </button>
+                    <button onclick="window.openEditStudentModal(${editIndex})" class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition">
+                        ✏️ Sửa
+                    </button>
+                </div>` : '';
+
+            const extraInfo = extraClubContact ? `
+                <div class="text-xs text-blue-600 mt-1 font-bold">CLB: ${student.club || 'Chưa phân CLB'}</div>
+                <div class="text-xs text-gray-600 mt-0.5">PH: ${student.parentName || 'Chưa cập nhật'} (${student.parentRole || '...'}) - SĐT: ${student.phone || 'Chưa có'}</div>
+            ` : '';
+
             return `
-                <div class="text-sm font-bold text-gray-900 uppercase">${student.name}</div>
-                <div class="text-xs text-gray-600 mt-1">${student.gender || 'Nam'} | Sinh: ${formatDate(student.dob)}</div>
-                <div class="text-xs text-green-700 font-semibold mt-1">Nhập học: ${formatDate(student.startDate)}</div>
-                ${editBtn}
+                <div class="flex items-start gap-2.5">
+                    <div class="relative flex-shrink-0">
+                        <img ${editIndex !== null ? `id="student-avatar-${editIndex}"` : ''} src="${avatarSrc}" ${clickPreviewAttr} title="Bấm vào ảnh để phóng to hồ sơ" alt="Ảnh" class="w-12 h-12 rounded-lg avatar-center border border-gray-300 shadow-sm cursor-pointer hover:border-red-500 transition bg-gray-100">
+                        ${quickDeleteBadge}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div ${clickPreviewAttr} class="text-sm font-bold text-gray-900 uppercase cursor-pointer hover:text-red-600 leading-tight">${student.name}</div>
+                        <div class="text-xs text-gray-600 mt-0.5">${student.gender || 'Nam'} | Sinh: ${formatDate(student.dob)}</div>
+                        <div class="text-xs text-green-700 font-semibold mt-0.5">Nhập học: ${formatDate(student.startDate)}</div>
+                        ${extraInfo}
+                        ${actionBtns}
+                    </div>
+                </div>
             `;
         }
 
@@ -775,34 +1163,100 @@
             if (clubs.includes(currentVal)) select.value = currentVal;
         };
 
-        // ================= EXCEL FUNCTIONS =================
-        window.downloadTemplate = function() {
-            const ws = XLSX.utils.aoa_to_sheet([
-                ["Họ và tên", "Giới tính (Nam/Nữ)", "Ngày sinh (YYYY-MM-DD)", "Tên Phụ huynh", "Vai trò (Ba/Mẹ)", "SĐT Phụ huynh", "Cấp đai ban đầu", "Câu lạc bộ", "Ngày nhập học (YYYY-MM-DD)"],
-                ["NGUYỄN VĂN TEST", "Nam", "", "", "Ba", "", "Cấp 10", "Homyland 2", ""]
-            ]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "FileMau");
-            XLSX.writeFile(wb, "File_Mau_Them_Vo_Sinh.xlsx");
+        // ================= EXCEL KẾ TOÁN =================
+        function getSelectedAccountingYear() {
+            const accMonthVal = document.getElementById('accMonth') ? document.getElementById('accMonth').value : '';
+            if (accMonthVal && accMonthVal.includes('-')) return accMonthVal.split('-')[0];
+            return new Date().getFullYear().toString();
+        }
+
+        window.openExcelModal = function() {
+            window.toggleModal('excelModal', 'open');
         };
 
-        window.exportExcel = function() {
-            if (sortedStudentsCache.length === 0) return alert("Hệ thống chưa có danh sách võ sinh để xuất!");
-            const exportData = sortedStudentsCache.map((item, i) => {
-                const st = students[item.originalIndex];
-                return {
-                    "STT": i + 1, "Họ và tên": st.name, "Giới tính": st.gender || "", "Ngày sinh": st.dob || "",
-                    "Tên Phụ huynh": st.parentName || "", "Vai trò": st.parentRole || "", "SĐT Phụ huynh": st.phone || "",
-                    "Cấp đai": st.belt || "", "Câu lạc bộ": st.club || "", "Ngày nhập học": st.startDate || "",
-                    "Người thêm vào hệ thống": st.createdBy || "Hệ thống"
-                };
-            });
-            const ws = XLSX.utils.json_to_sheet(exportData);
+        function generateAccountingWorkbook() {
+            const year = getSelectedAccountingYear();
+            const headers = [
+                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Cấp đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh"
+            ];
+
+            for (let m = 1; m <= 12; m++) {
+                const mm = String(m).padStart(2, '0');
+                headers.push(`Tháng ${mm}/${year}`);
+                if ([3, 6, 9, 12].includes(m)) {
+                    headers.push(`Lệ phí thi T${mm}/${year}`);
+                }
+            }
+
+            const sheetRows = [headers];
+
+            if (sortedStudentsCache.length > 0) {
+                sortedStudentsCache.forEach((item, i) => {
+                    const st = students[item.originalIndex];
+                    const rowArr = [
+                        i + 1,
+                        st.name || "",
+                        st.gender || "",
+                        st.dob || "",
+                        st.startDate || "",
+                        st.belt || "",
+                        st.club || "",
+                        st.parentName || "",
+                        st.parentRole || "",
+                        st.phone || ""
+                    ];
+
+                    for (let m = 1; m <= 12; m++) {
+                        const mm = String(m).padStart(2, '0');
+                        const mKey = `${year}-${mm}`;
+                        const t = (st.tuition && st.tuition[mKey]) ? st.tuition[mKey] : null;
+                        rowArr.push((t && t.status === "Đã đóng") ? formatNumberInput(t.amount || 500000) : "");
+
+                        if ([3, 6, 9, 12].includes(m)) {
+                            const ef = (st.examFee && st.examFee[mKey]) ? st.examFee[mKey] : null;
+                            rowArr.push((ef && ef.status === "Đã đóng") ? formatNumberInput(ef.amount || 250000) : "");
+                        }
+                    }
+                    sheetRows.push(rowArr);
+                });
+            } else {
+                const emptySample = [1, "NGUYỄN VĂN A", "Nam", "2015-01-01", `${year}-01-01`, "Cấp 10", "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567"];
+                for (let m = 1; m <= 12; m++) {
+                    emptySample.push("");
+                    if ([3, 6, 9, 12].includes(m)) emptySample.push("");
+                }
+                sheetRows.push(emptySample);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "DanhSachVoSinh");
-            const now = new Date();
-            XLSX.writeFile(wb, `Danh_Sach_Vo_Sinh_Vi_Ho_${now.getDate()}_${now.getMonth()+1}_${now.getFullYear()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, `KeToan_${year}`);
+            return { wb, year };
+        }
+
+        window.downloadAccountingTemplate = function() {
+            const { wb, year } = generateAccountingWorkbook();
+            XLSX.writeFile(wb, `File_Mau_Ke_Toan_Vo_Sinh_${year}.xlsx`);
         };
+
+        window.exportAccountingExcel = function() {
+            const { wb, year } = generateAccountingWorkbook();
+            XLSX.writeFile(wb, `Bang_Hoc_Phi_Ke_Toan_12_Thang_${year}.xlsx`);
+        };
+
+        function parseExcelFeeCell(cellVal, defaultAmount) {
+            if (cellVal === undefined || cellVal === null) return null;
+            const str = cellVal.toString().trim();
+            if (!str) return null;
+            const norm = removeVietnameseTones(str);
+            if (norm.includes("chua") || norm === "0" || norm === "khong") {
+                return { status: "Chưa đóng", amount: String(defaultAmount), date: "" };
+            }
+            const digits = str.replace(/\D/g, '');
+            const amount = digits ? parseInt(digits, 10) : defaultAmount;
+            return { status: "Đã đóng", amount: String(amount), date: "" };
+        }
 
         window.handleExcelUpload = function(event) {
             const file = event.target.files[0];
@@ -810,32 +1264,88 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
                 if (jsonData.length === 0) return alert("File Excel trống hoặc định dạng không đúng!");
 
+                const defaultYear = getSelectedAccountingYear();
                 let addedCount = 0;
+                let updatedCount = 0;
+
                 jsonData.forEach(row => {
                     const rawName = (row["Họ và tên"] || row["HỌ VÀ TÊN"] || row["Tên"] || "").toString().trim().toUpperCase();
-                    if (rawName) {
-                        students.push({
+                    if (!rawName) return;
+
+                    const phoneVal = (row["SĐT Phụ huynh"] || row["SĐT"] || "").toString().trim();
+                    const clubVal = (row["Câu lạc bộ"] || row["CLB"] || "").toString().trim();
+                    const genderVal = (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "").toString().trim();
+                    const dobVal = (row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "").toString().trim();
+                    const startVal = (row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "").toString().trim();
+                    const parentVal = (row["Tên Phụ huynh"] || "").toString().trim();
+                    const roleVal = (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "").toString().trim();
+                    const beltVal = (row["Cấp đai"] || row["Cấp đai ban đầu"] || "").toString().trim();
+
+                    let targetStudent = students.find(s => s && s.name && s.name.toUpperCase() === rawName);
+                    if (!targetStudent) {
+                        targetStudent = {
                             name: rawName,
-                            gender: (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "Nam").toString().trim(),
-                            dob: (row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "").toString().trim(),
-                            parentName: (row["Tên Phụ huynh"] || "").toString().trim(),
-                            parentRole: (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "Ba").toString().trim(),
-                            phone: (row["SĐT Phụ huynh"] || row["SĐT"] || "").toString().trim(),
-                            belt: (row["Cấp đai ban đầu"] || row["Cấp đai"] || "Cấp 10").toString().trim(),
-                            club: (row["Câu lạc bộ"] || row["CLB"] || "Chưa phân CLB").toString().trim(),
-                            startDate: (row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "").toString().trim(),
-                            createdBy: currentUser, dailyData: {}, tuition: {}, examFee: {}
-                        });
+                            gender: genderVal || "Nam",
+                            dob: dobVal,
+                            parentName: parentVal,
+                            parentRole: roleVal || "Ba",
+                            phone: phoneVal,
+                            belt: beltVal || "Cấp 10",
+                            club: clubVal || "Chưa phân CLB",
+                            startDate: startVal,
+                            createdBy: currentUser,
+                            dailyData: {}, tuition: {}, examFee: {}
+                        };
+                        students.push(targetStudent);
                         addedCount++;
+                    } else {
+                        if (genderVal) targetStudent.gender = genderVal;
+                        if (dobVal) targetStudent.dob = dobVal;
+                        if (startVal) targetStudent.startDate = startVal;
+                        if (parentVal) targetStudent.parentName = parentVal;
+                        if (roleVal) targetStudent.parentRole = roleVal;
+                        if (phoneVal) targetStudent.phone = phoneVal;
+                        if (clubVal) targetStudent.club = clubVal;
+                        if (beltVal) targetStudent.belt = beltVal;
+                        if (!targetStudent.tuition) targetStudent.tuition = {};
+                        if (!targetStudent.examFee) targetStudent.examFee = {};
+                        updatedCount++;
                     }
+
+                    Object.keys(row).forEach(colKey => {
+                        const cleanKey = colKey.trim();
+                        const matchMonth = cleanKey.match(/^Tháng\s*(\d{1,2})(?:\/(\d{4}))?$/i);
+                        if (matchMonth) {
+                            const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
+                            const yy = matchMonth[2] || defaultYear;
+                            const mKey = `${yy}-${mm}`;
+                            const parsed = parseExcelFeeCell(row[colKey], 500000);
+                            if (parsed) {
+                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
+                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
+                            }
+                        }
+
+                        const matchExam = cleanKey.match(/^Lệ phí thi\s*T?(\d{1,2})(?:\/(\d{4}))?$/i);
+                        if (matchExam) {
+                            const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
+                            const yy = matchExam[2] || defaultYear;
+                            const mKey = `${yy}-${mm}`;
+                            const parsed = parseExcelFeeCell(row[colKey], 250000);
+                            if (parsed) {
+                                const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
+                                targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
+                            }
+                        }
+                    });
                 });
 
-                if (addedCount > 0) {
+                if (addedCount > 0 || updatedCount > 0) {
                     set(ref(db, 'students'), students);
-                    alert(`Đã thêm thành công ${addedCount} võ sinh (Tự động IN HOA) vào hệ thống.`);
+                    alert(`Đã cập nhật dữ liệu từ Excel thành công!\n- Thêm mới: ${addedCount} võ sinh\n- Cập nhật thông tin & học phí: ${updatedCount} võ sinh.`);
                     toggleModal('excelModal', 'close');
                 } else {
                     alert("Không tìm thấy cột 'Họ và tên' hợp lệ!");
@@ -845,7 +1355,7 @@
             reader.readAsArrayBuffer(file);
         };
 
-        // ================= LƯU TRỮ FIREBASE TỐI ƯU =================
+        // ================= LƯU TRỮ FIREBASE =================
         function saveSingleStudent(index, silent = false) {
             if (students[index]) {
                 if (silent) skipNextFirebaseRender = true;
@@ -948,6 +1458,14 @@
         window.toggleModal = (id, action) => document.getElementById(id).classList.toggle('hidden', action !== 'open');
 
         // ================= THÊM & SỬA VÕ SINH =================
+        window.openAddStudentModal = function() {
+            tempAddPhotoBase64 = "";
+            document.getElementById('inpPhotoPreview').src = defaultAvatarSVG;
+            document.getElementById('inpPhotoInput').value = "";
+            document.getElementById('btnClearAddPhoto').classList.add('hidden');
+            window.toggleModal('addStudentModal', 'open');
+        };
+
         document.getElementById('addStudentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const rawName = document.getElementById('inpName').value.trim().toUpperCase();
@@ -956,6 +1474,7 @@
             const currentDateVal = document.getElementById('currentDate').value;
             const newStudent = {
                 name: rawName,
+                photo: tempAddPhotoBase64 || "",
                 gender: document.getElementById('inpGender').value || "Nam",
                 dob: document.getElementById('inpDOB').value || "",
                 parentName: document.getElementById('inpParentName').value.trim() || "",
@@ -975,6 +1494,7 @@
             saveSingleStudent(students.length - 1, false);
             toggleModal('addStudentModal', 'close'); 
             this.reset();
+            tempAddPhotoBase64 = "";
             document.getElementById('inpBelt').selectedIndex = 0; 
             alert(`Đã thêm võ sinh "${rawName}" thành công!`);
         });
@@ -996,6 +1516,10 @@
         window.openEditStudentModal = function(studentIdx) {
             adminEditingStudentIdx = studentIdx;
             const s = students[studentIdx];
+            tempEditPhotoBase64 = s.photo || "";
+            document.getElementById('editPhotoPreview').src = s.photo || defaultAvatarSVG;
+            document.getElementById('editPhotoInput').value = "";
+            document.getElementById('btnClearEditPhoto').classList.toggle('hidden', !s.photo);
             document.getElementById('editName').value = (s.name || "").toUpperCase(); 
             document.getElementById('editGender').value = s.gender || "Nam";
             document.getElementById('editDOB').value = s.dob || ""; 
@@ -1012,6 +1536,7 @@
             e.preventDefault();
             const s = students[adminEditingStudentIdx];
             s.name = document.getElementById('editName').value.trim().toUpperCase(); 
+            s.photo = tempEditPhotoBase64; // Cho phép lưu cả khi đã bấm Xóa ảnh (tempEditPhotoBase64 === "")
             s.gender = document.getElementById('editGender').value || "Nam";
             s.dob = document.getElementById('editDOB').value || ""; 
             s.parentName = document.getElementById('editParentName').value.trim() || "";
@@ -1027,7 +1552,7 @@
             alert("Đã cập nhật hồ sơ thành công!");
         });
 
-        // ================= HỌC PHÍ & LỆ PHÍ THI (DÙNG CHUNG HÀM TỐI ƯU) =================
+        // ================= HỌC PHÍ & LỆ PHÍ THI =================
         function getOffsetMonth(baseMonth, offset) {
             let [year, month] = baseMonth.split('-').map(Number);
             month += offset;
@@ -1041,46 +1566,62 @@
             const monthList = [-2, -1, 0, 1, 2].map(offset => getOffsetMonth(accMonth, offset));
 
             monthList.forEach(m => {
-                let paidSum = 0, unpaidSum = 0;
+                let paidMoneySum = 0;
+                let unpaidStudentCount = 0;
+
                 for (let i = 0; i < filteredTuitionIndices.length; i++) {
                     const st = students[filteredTuitionIndices[i]];
                     if (!st) continue;
                     const t = (st.tuition && st.tuition[m]) ? st.tuition[m] : { status: "Chưa đóng", amount: "500000" };
-                    const amount = Number(t.amount) || 0;
-                    if (t.status === "Đã đóng") paidSum += amount; else unpaidSum += amount;
+                    if (t.status === "Đã đóng") {
+                        paidMoneySum += parseRawNumber(t.amount);
+                    } else {
+                        unpaidStudentCount++;
+                    }
                 }
                 const paidEl = document.getElementById(`tuition-paid-${m}`);
                 const unpaidEl = document.getElementById(`tuition-unpaid-${m}`);
-                if (paidEl) paidEl.innerText = formatMoney(paidSum);
-                if (unpaidEl) unpaidEl.innerText = formatMoney(unpaidSum);
+                if (paidEl) paidEl.innerText = formatMoney(paidMoneySum);
+                if (unpaidEl) unpaidEl.innerText = `${unpaidStudentCount} võ sinh`;
 
                 if ([3, 6, 9, 12].includes(parseInt(m.split('-')[1]))) {
-                    let efPaidSum = 0, efUnpaidSum = 0;
+                    let efPaidMoneySum = 0;
+                    let efUnpaidStudentCount = 0;
                     for (let i = 0; i < filteredTuitionIndices.length; i++) {
                         const st = students[filteredTuitionIndices[i]];
                         if (!st) continue;
                         const ef = (st.examFee && st.examFee[m]) ? st.examFee[m] : { status: "Chưa đóng", amount: "250000" };
-                        const efAmount = Number(ef.amount) || 0;
-                        if (ef.status === "Đã đóng") efPaidSum += efAmount; else efUnpaidSum += efAmount;
+                        if (ef.status === "Đã đóng") {
+                            efPaidMoneySum += parseRawNumber(ef.amount);
+                        } else {
+                            efUnpaidStudentCount++;
+                        }
                     }
                     const efPaidEl = document.getElementById(`exam-paid-${m}`);
                     const efUnpaidEl = document.getElementById(`exam-unpaid-${m}`);
-                    if (efPaidEl) efPaidEl.innerText = formatMoney(efPaidSum);
-                    if (efUnpaidEl) efUnpaidEl.innerText = formatMoney(efUnpaidSum);
+                    if (efPaidEl) efPaidEl.innerText = formatMoney(efPaidMoneySum);
+                    if (efUnpaidEl) efUnpaidEl.innerText = `${efUnpaidStudentCount} võ sinh`;
                 }
             });
         }
 
-        window.updateFeeRecord = function(type, index, month, field, value, selectEl) {
+        window.updateFeeRecord = function(type, index, month, field, value, el) {
             const defaultAmt = type === 'tuition' ? "500000" : "250000";
             if (!students[index][type]) students[index][type] = {};
             if (!students[index][type][month]) students[index][type][month] = { status: "Chưa đóng", amount: defaultAmt, date: "" };
-            students[index][type][month][field] = value;
 
-            if (field === 'status' && selectEl) {
+            if (field === 'amount') {
+                const rawNum = parseRawNumber(value);
+                students[index][type][month].amount = String(rawNum);
+                if (el) el.value = formatNumberInput(rawNum);
+            } else {
+                students[index][type][month][field] = value;
+            }
+
+            if (field === 'status' && el) {
                 const isPaid = value === "Đã đóng";
                 const paidStyle = type === 'tuition' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-purple-100 text-purple-700 border-purple-300';
-                selectEl.className = `text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? paidStyle : 'bg-yellow-100 text-yellow-700 border-yellow-300'}`;
+                el.className = `text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? paidStyle : 'bg-yellow-100 text-yellow-700 border-yellow-300'}`;
             }
 
             refreshTuitionColumnTotals();
@@ -1160,12 +1701,10 @@
                 const btnAbsentClass = dayData.attendance === 'Vắng' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-red-50';
                 const activeHandler = dayData.updatedBy || student.lastEditedBy || student.createdBy || 'Hệ thống';
 
-                rows.push(`<tr class="fast-row ${isQuit ? 'bg-red-100' : 'hover:bg-gray-50'}">
-                    <td class="px-3 py-3 text-center align-top text-sm font-extrabold text-gray-500">${stt++}</td>
-                    <td class="px-4 py-3 align-top border-l border-gray-100">
-                        ${renderStudentProfileBox(student, index)}
-                        <div class="text-xs text-blue-600 mt-1 font-bold">CLB: ${student.club || 'Chưa phân CLB'}</div>
-                        <div class="text-xs text-gray-600 mt-0.5">PH: ${student.parentName || 'Chưa cập nhật'} (${student.parentRole || '...'}) - SĐT: ${student.phone || 'Chưa có'}</div>
+                rows.push(`<tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                    <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
+                    <td class="sticky-col-2 px-3 py-3 align-top border-l border-b border-gray-100">
+                        ${renderStudentProfileBox(student, index, true)}
                     </td>
                     <td class="px-4 py-3 align-top">
                         <span class="text-xs font-bold ${isQuit ? 'text-gray-700 border-gray-300' : 'text-blue-700 bg-blue-50 border-blue-100'} px-2 py-1 rounded border inline-flex items-center gap-1">
@@ -1222,7 +1761,7 @@
                     <div class="text-sm font-extrabold mb-1.5">${idx === 2 ? '⭐ ' : ''}Tháng ${mm}/${y}</div>
                     <div class="bg-white rounded p-1.5 border border-green-300 text-left space-y-1 shadow-sm">
                         <div class="flex justify-between items-center text-xs"><span class="text-gray-600 font-semibold">Đã thu:</span><span id="tuition-paid-${m}" class="font-extrabold text-green-600">0đ</span></div>
-                        <div class="flex justify-between items-center text-xs border-t pt-1"><span class="text-gray-600 font-semibold">Chưa thu:</span><span id="tuition-unpaid-${m}" class="font-extrabold text-red-600">0đ</span></div>
+                        <div class="flex justify-between items-center text-xs border-t pt-1"><span class="text-gray-600 font-semibold">Chưa thu:</span><span id="tuition-unpaid-${m}" class="font-extrabold text-red-600">0 võ sinh</span></div>
                     </div>`;
                 trHeader.appendChild(th);
 
@@ -1234,7 +1773,7 @@
                         <div class="text-sm font-extrabold mb-1.5">🏆 Lệ phí thi (${m})</div>
                         <div class="bg-white rounded p-1.5 border border-purple-300 text-left space-y-1 shadow-sm">
                             <div class="flex justify-between items-center text-xs"><span class="text-gray-600 font-semibold">Đã thu:</span><span id="exam-paid-${m}" class="font-extrabold text-green-600">0đ</span></div>
-                            <div class="flex justify-between items-center text-xs border-t pt-1"><span class="text-gray-600 font-semibold">Chưa thu:</span><span id="exam-unpaid-${m}" class="font-extrabold text-red-600">0đ</span></div>
+                            <div class="flex justify-between items-center text-xs border-t pt-1"><span class="text-gray-600 font-semibold">Chưa thu:</span><span id="exam-unpaid-${m}" class="font-extrabold text-red-600">0 võ sinh</span></div>
                         </div>`;
                     trHeader.appendChild(thExam);
                 }
@@ -1257,9 +1796,9 @@
                 filteredTuitionIndices.push(index);
                 const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
                 
-                let rowHtml = `<tr class="fast-row ${isQuit ? 'bg-red-100' : 'hover:bg-gray-50'}">
-                    <td class="px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500">${stt++}</td>
-                    <td class="px-4 py-3 border-l border-green-200 align-top">${renderStudentProfileBox(student, index)}</td>
+                let rowHtml = `<tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                    <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
+                    <td class="sticky-col-2 px-3 py-3 border-l border-b border-green-200 align-top">${renderStudentProfileBox(student, index, false)}</td>
                     <td class="px-4 py-3 border-l border-green-200 align-top">${renderStudentContactBox(student)}</td>`;
 
                 for (let idx = 0; idx < monthList.length; idx++) {
@@ -1271,7 +1810,7 @@
                         <div class="flex flex-col gap-1.5">
                             <div class="flex items-center justify-end gap-1.5">
                                 <span class="text-xs text-gray-600">Tiền:</span>
-                                <input type="number" value="${t.amount}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value)" class="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-semibold ${isQuit ? 'bg-transparent' : ''}">
+                                <input type="text" inputmode="numeric" value="${formatNumberInput(t.amount)}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
                             </div>
                             <div class="flex items-center justify-end gap-1.5">
                                 <span class="text-xs text-gray-600">Ngày:</span>
@@ -1293,7 +1832,7 @@
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Tiền:</span>
-                                    <input type="number" value="${ef.amount}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value)" class="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-semibold ${isQuit ? 'bg-transparent' : ''}">
+                                    <input type="text" inputmode="numeric" value="${formatNumberInput(ef.amount)}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
                                 </div>
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Ngày:</span>
@@ -1342,7 +1881,7 @@
 
                 const t = (student.tuition && student.tuition[adminMonth]) ? student.tuition[adminMonth] : null;
                 const feeStatusHTML = (t && t.status === "Đã đóng")
-                    ? `<span class="text-green-600 font-bold">Đã đóng</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`
+                    ? `<span class="text-green-600 font-bold">Đã đóng (${formatMoney(t.amount || 500000)})</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`
                     : `<span class="text-yellow-600 font-bold">Chưa đóng</span>`;
 
                 const unpaidMonths = getUnpaidMonthsList(student, adminMonth);
@@ -1357,9 +1896,9 @@
                 }
 
                 rows.push(`
-                    <tr class="fast-row ${isQuit ? 'bg-red-100' : 'hover:bg-gray-50'}">
-                        <td class="px-3 py-3 text-center align-top text-sm font-extrabold text-gray-500">${stt++}</td>
-                        <td class="px-4 py-3 border-l border-gray-200 align-top">${renderStudentProfileBox(student)}</td>
+                    <tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                        <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
+                        <td class="sticky-col-2 px-3 py-3 border-l border-b border-gray-200 align-top">${renderStudentProfileBox(student, index, false)}</td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top">${renderStudentContactBox(student)}</td>
                         <td class="px-4 py-3 border-l border-gray-200 text-center ${isQuit ? '' : 'bg-gray-50'} align-top">
                             <div class="text-sm">Đi học: <span class="font-bold text-blue-600 text-base">${daysAttended}</span> buổi</div>
@@ -1397,9 +1936,9 @@
                 if (searchTrash && !removeVietnameseTones(stName).includes(removeVietnameseTones(searchTrash))) return;
 
                 rows.push(`
-                    <tr class="hover:bg-red-50">
-                        <td class="px-3 py-3 text-center align-top text-sm font-extrabold text-gray-500">${stt++}</td>
-                        <td class="px-4 py-3 border-l border-gray-200 align-top">${renderStudentProfileBox(st)}</td>
+                    <tr class="bg-white hover:bg-red-50">
+                        <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
+                        <td class="sticky-col-2 px-3 py-3 border-l border-b border-gray-200 align-top">${renderStudentProfileBox(st, null, false, true, idx)}</td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top">${renderStudentContactBox(st)}</td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top text-xs text-gray-600">
                             <div>Xóa lúc: <span class="font-semibold text-gray-800">${st.deletedAt || 'Không rõ'}</span></div>
