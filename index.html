@@ -374,7 +374,7 @@
 
     </main>
 
-    <!-- ================= MODAL: PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH (CÓ NÚT XÓA ẢNH) ================= -->
+    <!-- ================= MODAL: PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH ================= -->
     <div id="photoPreviewModal" onclick="if(event.target === this) window.toggleModal('photoPreviewModal', 'close')" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
         <div class="relative mx-auto border w-full max-w-md shadow-2xl rounded-2xl bg-white overflow-hidden">
             <div class="bg-red-600 px-5 py-3.5 flex justify-between items-center text-white">
@@ -383,12 +383,10 @@
             </div>
 
             <div class="p-5 flex flex-col items-center">
-                <!-- Khung ảnh phóng to luôn nằm chính giữa -->
                 <div class="w-60 h-60 sm:w-64 sm:h-64 rounded-xl overflow-hidden border-4 border-red-500 shadow-lg bg-gray-100 flex items-center justify-center mb-4">
                     <img id="previewModalImg" src="" alt="Ảnh võ sinh" class="w-full h-full avatar-center">
                 </div>
 
-                <!-- Bộ nút Chụp/Đổi ảnh & Xóa ảnh nếu tải sai -->
                 <div class="flex items-center justify-center gap-2 mb-4">
                     <button id="previewChangePhotoBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-full shadow transition flex items-center gap-1.5">
                         📷 Chụp / Đổi ảnh
@@ -398,7 +396,6 @@
                     </button>
                 </div>
 
-                <!-- Thông tin chi tiết của võ sinh -->
                 <div class="w-full bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2 text-sm">
                     <div class="text-center border-b pb-2 mb-2">
                         <div id="previewModalName" class="text-lg font-extrabold text-gray-900 uppercase"></div>
@@ -447,7 +444,7 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: CHỈNH SỬA HỒ SƠ (CÓ XÓA ẢNH & CANH GIỮA) ================= -->
+    <!-- ================= MODAL: CHỈNH SỬA HỒ SƠ ================= -->
     <div id="editStudentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white m-4">
             <div class="flex justify-between items-center mb-4 border-b pb-3">
@@ -455,7 +452,6 @@
                 <button type="button" onclick="toggleModal('editStudentModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
             <form id="editStudentForm" class="space-y-3.5">
-                <!-- Khu vực chụp/tải/xóa ảnh trong Modal Sửa -->
                 <div class="flex items-center gap-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
                     <img id="editPhotoPreview" src="" alt="Avatar" class="w-16 h-16 rounded-lg avatar-center border-2 border-white shadow bg-gray-200 flex-shrink-0">
                     <div class="flex-1">
@@ -546,7 +542,7 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: THÊM VÕ SINH MỚI (CÓ XÓA ẢNH & CANH GIỮA) ================= -->
+    <!-- ================= MODAL: THÊM VÕ SINH MỚI ================= -->
     <div id="addStudentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white m-4">
             <div class="flex justify-between items-center mb-3 border-b pb-3">
@@ -557,7 +553,6 @@
                 <button type="button" onclick="toggleModal('addStudentModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
             <form id="addStudentForm" class="space-y-3.5">
-                <!-- Khu vực chụp/tải/xóa ảnh khi Thêm mới -->
                 <div class="flex items-center gap-4 bg-red-50 p-3 rounded-lg border border-red-200">
                     <img id="inpPhotoPreview" src="" alt="Avatar" class="w-16 h-16 rounded-lg avatar-center border-2 border-white shadow bg-gray-200 flex-shrink-0">
                     <div class="flex-1">
@@ -655,7 +650,7 @@
             <text x="150" y="240" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">TAEKWONDO</text>
         </svg>`);
 
-        // ẢNH ĐẠI DIỆN MẶC ĐỊNH CHO VÕ SINH CHƯA CÓ ẢNH (CŨNG ĐƯỢC CANH GIỮA)
+        // ẢNH ĐẠI DIỆN MẶC ĐỊNH CHO VÕ SINH CHƯA CÓ ẢNH
         const defaultAvatarSVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
             <rect width="120" height="120" fill="#f3f4f6"/>
@@ -748,7 +743,6 @@
                     canvas.height = targetSize;
                     const ctx = canvas.getContext('2d');
 
-                    // Tự động lấy phần vuông ngay chính giữa bức ảnh gốc (dù chụp dọc hay ngang)
                     const minSide = Math.min(img.width, img.height);
                     const startX = (img.width - minSide) / 2;
                     const startY = (img.height - minSide) / 2;
@@ -762,7 +756,6 @@
             reader.readAsDataURL(file);
         }
 
-        // CHỤP / CẬP NHẬT NHANH ẢNH VÕ SINH
         window.triggerQuickPhotoUpload = function(studentIdx) {
             quickPhotoTargetIdx = studentIdx;
             const input = document.getElementById('quickPhotoInput');
@@ -779,13 +772,11 @@
                 students[targetIdx].photo = base64Data;
                 students[targetIdx].lastEditedBy = currentUser;
 
-                // Cập nhật ảnh và hiện nút xóa nhanh trên bảng
                 const thumbImg = document.getElementById(`student-avatar-${targetIdx}`);
                 if (thumbImg) thumbImg.src = base64Data;
                 const delBadge = document.getElementById(`del-photo-badge-${targetIdx}`);
                 if (delBadge) delBadge.classList.remove('hidden');
 
-                // Nếu đang mở Modal phóng to thì cập nhật luôn ảnh & hiện nút Xóa ảnh
                 const previewModal = document.getElementById('photoPreviewModal');
                 if (previewModal && !previewModal.classList.contains('hidden')) {
                     document.getElementById('previewModalImg').src = base64Data;
@@ -797,7 +788,6 @@
             });
         };
 
-        // XÓA ẢNH VÕ SINH NẾU TẢI SAI (TRỰC TIẾP TỪ BẢNG HOẶC TỪ MODAL PHÓNG TO)
         window.removeStudentPhoto = function(studentIdx, ev) {
             if (ev) ev.stopPropagation();
             const st = students[studentIdx];
@@ -823,7 +813,6 @@
             }
         };
 
-        // XỬ LÝ XEM TRƯỚC & XÓA ẢNH TRONG MODAL THÊM / SỬA HỒ SƠ
         window.handleModalPhotoPreview = function(event, mode) {
             const file = event.target.files[0];
             if (!file) return;
@@ -854,7 +843,6 @@
             }
         };
 
-        // MỞ MODAL PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH
         window.openPhotoPreviewModal = function(studentIdx, isTrash = false) {
             const st = isTrash ? deletedStudents[studentIdx] : students[studentIdx];
             if (!st) return;
@@ -926,14 +914,12 @@
             return parts[parts.length - 1];
         }
 
-        // RENDER HỒ SƠ VÕ SINH KÈM ẢNH ĐẠI DIỆN CANH GIỮA + NÚT XÓA NHANH TRÊN ẢNH NẾU TẢI SAI
         function renderStudentProfileBox(student, editIndex = null, extraClubContact = false, isTrash = false, trashIdx = 0) {
             const hasPhoto = Boolean(student.photo);
             const avatarSrc = hasPhoto ? student.photo : defaultAvatarSVG;
             const previewIdx = isTrash ? trashIdx : editIndex;
             const clickPreviewAttr = previewIdx !== null ? `onclick="window.openPhotoPreviewModal(${previewIdx}, ${isTrash})"` : '';
 
-            // Nút dấu X nhỏ trên góc ảnh để xóa nhanh nếu tải sai
             const quickDeleteBadge = editIndex !== null ? `
                 <button id="del-photo-badge-${editIndex}" onclick="window.removeStudentPhoto(${editIndex}, event)" title="Xóa ảnh này" class="${hasPhoto ? '' : 'hidden'} absolute -top-1.5 -right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold shadow">
                     &times;
@@ -1400,7 +1386,7 @@
             }
         };
 
-        // ================= XỬ LÝ DỮ LIỆU NGÀY & ĐIỂM DANH =================
+        // ================= XỬ LÝ DỮ LIỆU NGÀY & ĐIỂM DANH (NHẤN LẦN 2 ĐỂ HỦY TRẢ LẠI TRẠNG THÁI CŨ) =================
         function getDailyData(student, targetDate) {
             if (!student.dailyData) student.dailyData = {};
             if (student.dailyData[targetDate]) return student.dailyData[targetDate];
@@ -1445,13 +1431,23 @@
         window.updateExamStatus = (idx, val) => setDailyField(idx, 'examStatus', val, true);
         window.updateHLVNote = (idx, val) => setDailyField(idx, 'note', val, true);
 
+        // NHẤN 1 LẦN LÀ ĐIỂM DANH, NHẤN THÊM 1 LẦN NỮA VÀO NÚT ĐÓ LÀ HỦY TRẢ VỀ TRẠNG THÁI CŨ (CHƯA ĐIỂM DANH)
         window.markAttendance = function(index, status) {
-            setDailyField(index, 'attendance', status, true);
+            const date = document.getElementById('currentDate').value;
+            if (!date) return alert("Vui lòng chọn ngày!");
+            if (!students[index].dailyData) students[index].dailyData = {};
+            if (!students[index].dailyData[date]) students[index].dailyData[date] = { ...getDailyData(students[index], date) };
+
+            const currentAttendance = students[index].dailyData[date].attendance;
+            const newAttendance = (currentAttendance === status) ? null : status;
+
+            setDailyField(index, 'attendance', newAttendance, true);
+
             const btnPresent = document.getElementById(`btn-present-${index}`);
             const btnAbsent = document.getElementById(`btn-absent-${index}`);
             if (btnPresent && btnAbsent) {
-                btnPresent.className = `px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${status === 'Có mặt' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-green-50'}`;
-                btnAbsent.className = `px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${status === 'Vắng' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-red-50'}`;
+                btnPresent.className = `px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${newAttendance === 'Có mặt' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-green-50'}`;
+                btnAbsent.className = `px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${newAttendance === 'Vắng' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-red-50'}`;
             }
         };
 
@@ -1536,7 +1532,7 @@
             e.preventDefault();
             const s = students[adminEditingStudentIdx];
             s.name = document.getElementById('editName').value.trim().toUpperCase(); 
-            s.photo = tempEditPhotoBase64; // Cho phép lưu cả khi đã bấm Xóa ảnh (tempEditPhotoBase64 === "")
+            s.photo = tempEditPhotoBase64;
             s.gender = document.getElementById('editGender').value || "Nam";
             s.dob = document.getElementById('editDOB').value || ""; 
             s.parentName = document.getElementById('editParentName').value.trim() || "";
