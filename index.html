@@ -120,7 +120,7 @@
     <header class="bg-white shadow-sm border-b border-red-600 w-full flex-shrink-0">
         <div class="w-full px-4 sm:px-6 flex justify-between items-center h-16">
             <div class="flex items-center gap-3">
-                <img id="headerLogoImg" src="" onclick="document.getElementById('logoUploadInput').click()" title="Bấm vào đây để đổi/lưu Logo CLB vĩnh viễn lên Web" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain cursor-pointer">
+                <img id="headerLogoImg" src="" onclick="window.triggerLogoUpload()" title="Logo CLB Vĩ Hồ" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain">
                 <div class="font-extrabold text-xl sm:text-2xl text-red-600 tracking-wide">TAEKWONDO VĨ HỒ</div>
             </div>
             <div class="flex items-center gap-4">
@@ -210,11 +210,11 @@
                         <tr>
                             <th class="sticky-col-1 bg-red-50 px-2 py-3 text-center text-xs font-bold text-red-700 uppercase border-b border-red-200">STT</th>
                             <th class="sticky-col-2 bg-red-50 px-3 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Hồ sơ Võ sinh (Bấm ảnh phóng to)</th>
-                            <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Cấp Đai</th>
+                            <th class="bg-red-50 px-4 py-3 text-center text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Điểm danh</th>
+                            <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Cấp Đai</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Trạng thái</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Thi cấp</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase border-b border-red-200" style="min-width: 180px;">Ghi chú HLV</th>
-                            <th class="bg-red-50 px-4 py-3 text-right text-xs font-bold text-red-700 uppercase whitespace-nowrap border-b border-red-200">Điểm danh</th>
                             <th class="bg-red-50 px-4 py-3 text-left text-xs font-bold text-red-700 uppercase whitespace-nowrap border-l border-b border-red-200">Người nhập</th>
                         </tr>
                     </thead>
@@ -225,16 +225,34 @@
 
         <!-- ================= TAB 2: HỌC PHÍ (KẾ TOÁN) ================= -->
         <div id="hocphi" class="tab-content hidden w-full h-full flex flex-col min-h-0">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2 flex-shrink-0">
-                <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border">
-                    <h2 class="text-sm font-bold text-gray-800">Chọn tháng làm mốc:</h2>
-                    <input type="month" id="accMonth" class="border-none bg-gray-50 rounded px-2 py-1 text-sm font-bold text-green-700 outline-none cursor-pointer" onchange="renderTuitionTable()">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-2 flex-shrink-0 bg-white p-2.5 rounded-lg shadow-sm border">
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <div class="flex items-center gap-1.5 bg-green-50 px-2.5 py-1.5 rounded-md border border-green-200">
+                        <span class="text-xs font-bold text-green-800 whitespace-nowrap">Tháng mốc:</span>
+                        <input type="month" id="accMonth" class="border-none bg-transparent text-sm font-extrabold text-green-700 outline-none cursor-pointer" onchange="renderTuitionTable()">
+                    </div>
+
+                    <select id="filterAccClub" onchange="window.renderTuitionTable()" class="border border-gray-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 outline-none focus:border-green-600">
+                        <option value="All">- Tất cả CLB -</option>
+                    </select>
+
+                    <select id="filterAccFeeStatus" onchange="window.renderTuitionTable()" class="border border-red-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-red-700 bg-red-50 outline-none focus:border-red-600">
+                        <option value="All">📋 Tất cả võ sinh</option>
+                        <option value="unpaid_month">❌ Chưa đóng học phí tháng chọn</option>
+                        <option value="paid_month">✅ Đã đóng học phí tháng chọn</option>
+                        <option value="unpaid_exam">🏆 Chưa đóng lệ phí thi tháng chọn</option>
+                    </select>
+
+                    <span id="accFilterCountBadge" class="text-xs font-extrabold bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-md border">0 võ sinh</span>
                 </div>
                 
-                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Kế Toán (12 Tháng)</button>
-                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-yellow-600 shadow-sm">📤 Tải / Xuất Excel Kế Toán (12 Tháng)</button>
-                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
+                <div class="flex flex-wrap gap-1.5 w-full lg:w-auto justify-end">
+                    <button onclick="window.exportFilteredStudentsExcel('hocphi')" class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-red-700 shadow-sm flex items-center gap-1" title="Tải danh sách võ sinh đang lọc trên bảng (VD: Danh sách chưa đóng tiền)">
+                        📥 Tải DS Lọc
+                    </button>
+                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel (12T)</button>
+                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12T)</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
             
@@ -260,22 +278,38 @@
 
         <!-- ================= TAB 3: TỔNG HỢP (ADMIN) ================= -->
         <div id="admin" class="tab-content hidden w-full h-full flex flex-col min-h-0">
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-3 flex-shrink-0">
-                <div>
-                    <h2 class="text-lg font-bold text-gray-800">Bảng Tổng Hợp Báo Cáo</h2>
-                    <p class="text-xs text-gray-500">Thống kê điểm danh, đối chiếu các tháng chưa đóng học phí và quản lý hồ sơ.</p>
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-2 mb-3 flex-shrink-0 bg-white p-2.5 rounded-lg shadow-sm border">
+                <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                    <div class="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1.5 rounded-md border border-blue-200">
+                        <span class="text-xs font-bold text-blue-800 whitespace-nowrap">Tháng xem:</span>
+                        <input type="month" id="adminMonth" class="border-none bg-transparent text-sm font-extrabold text-blue-700 outline-none cursor-pointer" onchange="renderAdminTable()">
+                    </div>
+
+                    <div class="w-full sm:w-48">
+                        <input type="text" id="searchAdminName" oninput="window.debouncedRender('admin')" placeholder="🔍 Tìm Họ và Tên..." class="w-full border border-blue-300 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-blue-600 bg-white">
+                    </div>
+
+                    <select id="filterAdminClub" onchange="window.renderAdminTable()" class="border border-gray-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 outline-none focus:border-blue-600">
+                        <option value="All">- Tất cả CLB -</option>
+                    </select>
+
+                    <select id="filterAdminFeeStatus" onchange="window.renderAdminTable()" class="border border-red-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-red-700 bg-red-50 outline-none focus:border-red-600">
+                        <option value="All">📋 Tất cả võ sinh</option>
+                        <option value="unpaid_month">❌ Chưa đóng tiền tháng chọn</option>
+                        <option value="unpaid_any">⚠️ Có nợ học phí cộng dồn</option>
+                        <option value="paid_month">✅ Đã đóng tiền tháng chọn</option>
+                    </select>
+
+                    <span id="adminFilterCountBadge" class="text-xs font-extrabold bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-md border">0 võ sinh</span>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-                    <div class="w-full sm:w-64">
-                        <input type="text" id="searchAdminName" oninput="window.debouncedRender('admin')" placeholder="🔍 Tìm Họ và Tên (có/không dấu)..." class="w-full border border-blue-400 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-600 shadow-sm bg-white">
-                    </div>
-                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12 Tháng)</button>
-                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
-                    <div class="flex items-center gap-2 bg-white p-1.5 rounded-lg shadow-sm border">
-                        <h2 class="text-sm font-bold text-gray-800 whitespace-nowrap pl-1">Tháng:</h2>
-                        <input type="month" id="adminMonth" class="border-none bg-gray-50 rounded px-2 py-1 text-sm font-bold text-blue-600 outline-none cursor-pointer" onchange="renderAdminTable()">
-                    </div>
+
+                <div class="flex flex-wrap gap-1.5 items-center w-full xl:w-auto justify-end">
+                    <button onclick="window.exportFilteredStudentsExcel('admin')" class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-red-700 shadow-sm flex items-center gap-1" title="Tải danh sách võ sinh đang lọc ra Excel">
+                        📥 Tải DS Lọc
+                    </button>
+                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
+                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12T)</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
             
@@ -686,11 +720,12 @@
         let deletedStudents = [];
         let sortedStudentsCache = [];
         let filteredTuitionIndices = [];
+        let filteredAdminIndices = [];
         let isDataLoaded = false;
         let searchDebounceTimer = null;
         let skipNextFirebaseRender = false;
 
-        // --- XỬ LÝ LOGO CLB ---
+        // --- XỬ LÝ LOGO CLB (CHỈ ADMIN MỚI ĐỔI ĐƯỢC) ---
         function applyLogoToDOM(logoSrc) {
             const srcToUse = logoSrc || embeddedFoxLogo;
             const hLogo = document.getElementById('headerLogoImg');
@@ -700,7 +735,17 @@
         }
         applyLogoToDOM(localStorage.getItem('clubLogoBase64'));
 
+        window.triggerLogoUpload = function() {
+            if (currentRole !== 'Admin') return;
+            document.getElementById('logoUploadInput').click();
+        };
+
         window.handleLogoChange = function(event) {
+            if (currentRole !== 'Admin') {
+                alert("Chỉ Admin mới có quyền đổi Logo CLB!");
+                event.target.value = "";
+                return;
+            }
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -878,16 +923,19 @@
             window.toggleModal('photoPreviewModal', 'open');
         };
 
-        // --- CÁC HÀM ĐỊNH DẠNG SỐ TIỀN CÓ DẤU PHÂN CÁCH (500.000) ---
+        // --- CÁC HÀM ĐỊNH DẠNG SỐ TIỀN ---
         function parseRawNumber(val) {
-            if (val === undefined || val === null) return 0;
+            if (val === undefined || val === null || val === "") return 0;
             const digits = val.toString().replace(/\D/g, '');
             return digits ? parseInt(digits, 10) : 0;
         }
 
         function formatNumberInput(val) {
-            const num = parseRawNumber(val);
-            return num === 0 && val === "" ? "" : num.toLocaleString('vi-VN');
+            if (val === undefined || val === null || val === "") return "";
+            const digits = val.toString().replace(/\D/g, '');
+            if (!digits) return "";
+            const num = parseInt(digits, 10);
+            return num === 0 ? "" : num.toLocaleString('vi-VN');
         }
 
         const formatMoney = (num) => parseRawNumber(num).toLocaleString('vi-VN') + 'đ';
@@ -1034,6 +1082,130 @@
             return unpaidMonths;
         }
 
+        // --- HÀM KIỂM TRA LỌC THÔNG MINH THEO THÁNG ĐƯỢC CHỌN ---
+        function checkStudentMatchesFeeFilter(student, targetMonth, filterMode) {
+            if (!filterMode || filterMode === 'All') return true;
+
+            const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
+            const isPaidMonth = Boolean(student.tuition && student.tuition[targetMonth] && student.tuition[targetMonth].status === "Đã đóng");
+
+            if (filterMode === 'unpaid_month') {
+                // Chỉ lọc võ sinh đang học, đã nhập học trước hoặc trong tháng đó và chưa đóng tiền tháng đó
+                if (isQuit) return false;
+                if (student.startDate && student.startDate.length >= 7 && student.startDate.slice(0, 7) > targetMonth) return false;
+                return !isPaidMonth;
+            }
+
+            if (filterMode === 'paid_month') {
+                return isPaidMonth;
+            }
+
+            if (filterMode === 'unpaid_any') {
+                if (isQuit) return false;
+                return getUnpaidMonthsList(student, targetMonth).length > 0;
+            }
+
+            if (filterMode === 'unpaid_exam') {
+                if (isQuit) return false;
+                const isExamPaid = Boolean(student.examFee && student.examFee[targetMonth] && student.examFee[targetMonth].status === "Đã đóng");
+                return !isExamPaid;
+            }
+
+            return true;
+        }
+
+        // --- XUẤT DANH SÁCH VÕ SINH ĐANG LỌC (CHƯA ĐÓNG TIỀN / THEO BỘ LỌC) RA EXCEL ---
+        window.exportFilteredStudentsExcel = function(tabSource) {
+            const isAcc = tabSource === 'hocphi';
+            const targetMonth = isAcc ? document.getElementById('accMonth').value : document.getElementById('adminMonth').value;
+            const filterMode = isAcc ? document.getElementById('filterAccFeeStatus').value : document.getElementById('filterAdminFeeStatus').value;
+            const clubFilter = isAcc ? document.getElementById('filterAccClub').value : document.getElementById('filterAdminClub').value;
+            const indicesList = isAcc ? filteredTuitionIndices : filteredAdminIndices;
+
+            if (!indicesList || indicesList.length === 0) {
+                return alert("Không có võ sinh nào trong danh sách lọc hiện tại để tải về!");
+            }
+
+            const [yearStr, monthStr] = (targetMonth || "").split('-');
+            const displayMonth = monthStr && yearStr ? `${monthStr}/${yearStr}` : targetMonth;
+
+            const headers = [
+                "STT",
+                "Họ và tên",
+                "Giới tính",
+                "Ngày sinh",
+                "Ngày nhập học",
+                "Cấp đai",
+                "Câu lạc bộ",
+                "Tên Phụ huynh",
+                "Vai trò",
+                "SĐT Phụ huynh",
+                "Trạng thái học",
+                `Số buổi đi học (${displayMonth})`,
+                `Học phí Tháng ${displayMonth}`,
+                `Số tiền đã đóng (${displayMonth})`,
+                `Ngày đóng (${displayMonth})`,
+                `Các tháng nợ cộng dồn (Tính đến ${displayMonth})`
+            ];
+
+            const sheetRows = [headers];
+
+            indicesList.forEach((studentIdx, idx) => {
+                const st = students[studentIdx];
+                if (!st) return;
+
+                let daysAttended = 0;
+                if (st.dailyData && targetMonth) {
+                    for (const [dateStr, data] of Object.entries(st.dailyData)) {
+                        if (dateStr.startsWith(targetMonth) && data.attendance === 'Có mặt') daysAttended++;
+                    }
+                }
+
+                const t = (st.tuition && st.tuition[targetMonth]) ? st.tuition[targetMonth] : null;
+                const isPaid = t && t.status === "Đã đóng";
+                const statusStr = isPaid ? "Đã đóng" : "Chưa đóng";
+                const amountStr = (isPaid && t.amount) ? formatNumberInput(t.amount) : "";
+                const datePaidStr = (isPaid && t.date) ? formatDate(t.date) : "";
+
+                const unpaidList = getUnpaidMonthsList(st, targetMonth).map(m => {
+                    const [y, mm] = m.split('-');
+                    return `T${mm}/${y}`;
+                }).join(', ');
+
+                sheetRows.push([
+                    idx + 1,
+                    st.name || "",
+                    st.gender || "Nam",
+                    formatDate(st.dob),
+                    formatDate(st.startDate),
+                    st.belt || "Cấp 10",
+                    st.club || "Chưa phân CLB",
+                    st.parentName || "",
+                    st.parentRole || "",
+                    st.phone || "",
+                    getLatestStatus(st),
+                    daysAttended,
+                    statusStr,
+                    amountStr,
+                    datePaidStr,
+                    unpaidList || "Đã đóng đủ"
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `DS_Loc_${monthStr}_${yearStr}`);
+
+            let filterSlug = "Tat_Ca";
+            if (filterMode === 'unpaid_month') filterSlug = "Chua_Dong_Hoc_Phi";
+            else if (filterMode === 'paid_month') filterSlug = "Da_Dong_Hoc_Phi";
+            else if (filterMode === 'unpaid_any') filterSlug = "No_Cong_Don";
+            else if (filterMode === 'unpaid_exam') filterSlug = "Chua_Dong_Le_Phi_Thi";
+
+            const clubSlug = clubFilter !== 'All' ? `_${removeVietnameseTones(clubFilter).replace(/\s+/g, '_')}` : '';
+            XLSX.writeFile(wb, `Danh_Sach_${filterSlug}_Thang_${monthStr}_${yearStr}${clubSlug}.xlsx`);
+        };
+
         // ================= ĐĂNG NHẬP & PHÂN QUYỀN =================
         window.selectLoginRole = function(role) {
             document.getElementById('loginRoleInput').value = role;
@@ -1097,6 +1269,18 @@
                 document.getElementById(id).classList.add('hidden');
             });
 
+            // Chỉ Admin mới đổi được Logo
+            const hLogo = document.getElementById('headerLogoImg');
+            if (hLogo) {
+                if (currentRole === 'Admin') {
+                    hLogo.classList.add('cursor-pointer');
+                    hLogo.title = "Bấm vào đây để đổi/lưu Logo CLB vĩnh viễn lên Web (Chỉ Admin)";
+                } else {
+                    hLogo.classList.remove('cursor-pointer');
+                    hLogo.title = "Logo CLB Vĩ Hồ";
+                }
+            }
+
             if (currentRole === 'HLV') {
                 document.getElementById('nav-diemdanh').classList.remove('hidden');
                 switchTab('diemdanh');
@@ -1142,14 +1326,16 @@
 
         window.updateClubFilterOptions = function() {
             const clubs = Array.from(new Set(students.map(s => s && s.club).filter(Boolean))).sort();
-            const select = document.getElementById('filterClub');
-            if (!select) return;
-            const currentVal = select.value;
-            select.innerHTML = `<option value="All">- Tất cả CLB -</option>` + clubs.map(c => `<option value="${c}">${c}</option>`).join('');
-            if (clubs.includes(currentVal)) select.value = currentVal;
+            ['filterClub', 'filterAccClub', 'filterAdminClub'].forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                const currentVal = select.value;
+                select.innerHTML = `<option value="All">- Tất cả CLB -</option>` + clubs.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (clubs.includes(currentVal)) select.value = currentVal;
+            });
         };
 
-        // ================= EXCEL KẾ TOÁN =================
+        // ================= EXCEL KẾ TOÁN 12 THÁNG =================
         function getSelectedAccountingYear() {
             const accMonthVal = document.getElementById('accMonth') ? document.getElementById('accMonth').value : '';
             if (accMonthVal && accMonthVal.includes('-')) return accMonthVal.split('-')[0];
@@ -1197,11 +1383,11 @@
                         const mm = String(m).padStart(2, '0');
                         const mKey = `${year}-${mm}`;
                         const t = (st.tuition && st.tuition[mKey]) ? st.tuition[mKey] : null;
-                        rowArr.push((t && t.status === "Đã đóng") ? formatNumberInput(t.amount || 500000) : "");
+                        rowArr.push((t && t.status === "Đã đóng" && t.amount) ? formatNumberInput(t.amount) : "");
 
                         if ([3, 6, 9, 12].includes(m)) {
                             const ef = (st.examFee && st.examFee[mKey]) ? st.examFee[mKey] : null;
-                            rowArr.push((ef && ef.status === "Đã đóng") ? formatNumberInput(ef.amount || 250000) : "");
+                            rowArr.push((ef && ef.status === "Đã đóng" && ef.amount) ? formatNumberInput(ef.amount) : "");
                         }
                     }
                     sheetRows.push(rowArr);
@@ -1231,17 +1417,22 @@
             XLSX.writeFile(wb, `Bang_Hoc_Phi_Ke_Toan_12_Thang_${year}.xlsx`);
         };
 
-        function parseExcelFeeCell(cellVal, defaultAmount) {
+        function parseExcelFeeCell(cellVal) {
             if (cellVal === undefined || cellVal === null) return null;
             const str = cellVal.toString().trim();
             if (!str) return null;
             const norm = removeVietnameseTones(str);
             if (norm.includes("chua") || norm === "0" || norm === "khong") {
-                return { status: "Chưa đóng", amount: String(defaultAmount), date: "" };
+                return { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
             }
             const digits = str.replace(/\D/g, '');
-            const amount = digits ? parseInt(digits, 10) : defaultAmount;
-            return { status: "Đã đóng", amount: String(amount), date: "" };
+            const amount = digits ? String(parseInt(digits, 10)) : "";
+            return { 
+                status: "Đã đóng", 
+                amount: amount, 
+                date: "", 
+                enteredByRole: (amount && currentRole === 'Admin') ? 'Admin' : '' 
+            };
         }
 
         window.handleExcelUpload = function(event) {
@@ -1308,7 +1499,7 @@
                             const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
                             const yy = matchMonth[2] || defaultYear;
                             const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey], 500000);
+                            const parsed = parseExcelFeeCell(row[colKey]);
                             if (parsed) {
                                 const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
                                 targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
@@ -1320,7 +1511,7 @@
                             const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
                             const yy = matchExam[2] || defaultYear;
                             const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey], 250000);
+                            const parsed = parseExcelFeeCell(row[colKey]);
                             if (parsed) {
                                 const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
                                 targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
@@ -1386,7 +1577,7 @@
             }
         };
 
-        // ================= XỬ LÝ DỮ LIỆU NGÀY & ĐIỂM DANH (NHẤN LẦN 2 ĐỂ HỦY TRẢ LẠI TRẠNG THÁI CŨ) =================
+        // ================= XỬ LÝ DỮ LIỆU NGÀY & ĐIỂM DANH =================
         function getDailyData(student, targetDate) {
             if (!student.dailyData) student.dailyData = {};
             if (student.dailyData[targetDate]) return student.dailyData[targetDate];
@@ -1431,7 +1622,6 @@
         window.updateExamStatus = (idx, val) => setDailyField(idx, 'examStatus', val, true);
         window.updateHLVNote = (idx, val) => setDailyField(idx, 'note', val, true);
 
-        // NHẤN 1 LẦN LÀ ĐIỂM DANH, NHẤN THÊM 1 LẦN NỮA VÀO NÚT ĐÓ LÀ HỦY TRẢ VỀ TRẠNG THÁI CŨ (CHƯA ĐIỂM DANH)
         window.markAttendance = function(index, status) {
             const date = document.getElementById('currentDate').value;
             if (!date) return alert("Vui lòng chọn ngày!");
@@ -1568,7 +1758,7 @@
                 for (let i = 0; i < filteredTuitionIndices.length; i++) {
                     const st = students[filteredTuitionIndices[i]];
                     if (!st) continue;
-                    const t = (st.tuition && st.tuition[m]) ? st.tuition[m] : { status: "Chưa đóng", amount: "500000" };
+                    const t = (st.tuition && st.tuition[m]) ? st.tuition[m] : { status: "Chưa đóng", amount: "" };
                     if (t.status === "Đã đóng") {
                         paidMoneySum += parseRawNumber(t.amount);
                     } else {
@@ -1586,7 +1776,7 @@
                     for (let i = 0; i < filteredTuitionIndices.length; i++) {
                         const st = students[filteredTuitionIndices[i]];
                         if (!st) continue;
-                        const ef = (st.examFee && st.examFee[m]) ? st.examFee[m] : { status: "Chưa đóng", amount: "250000" };
+                        const ef = (st.examFee && st.examFee[m]) ? st.examFee[m] : { status: "Chưa đóng", amount: "" };
                         if (ef.status === "Đã đóng") {
                             efPaidMoneySum += parseRawNumber(ef.amount);
                         } else {
@@ -1602,14 +1792,28 @@
         }
 
         window.updateFeeRecord = function(type, index, month, field, value, el) {
-            const defaultAmt = type === 'tuition' ? "500000" : "250000";
             if (!students[index][type]) students[index][type] = {};
-            if (!students[index][type][month]) students[index][type][month] = { status: "Chưa đóng", amount: defaultAmt, date: "" };
+            if (!students[index][type][month]) {
+                students[index][type][month] = { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
+            }
 
             if (field === 'amount') {
                 const rawNum = parseRawNumber(value);
-                students[index][type][month].amount = String(rawNum);
-                if (el) el.value = formatNumberInput(rawNum);
+                if (rawNum > 0) {
+                    students[index][type][month].amount = String(rawNum);
+                    students[index][type][month].enteredByRole = currentRole;
+                    if (el) el.value = formatNumberInput(rawNum);
+                } else {
+                    students[index][type][month].amount = "";
+                    students[index][type][month].enteredByRole = "";
+                    if (el) el.value = "";
+                }
+
+                const badgeEl = document.getElementById(`admin-fee-badge-${type}-${index}-${month}`);
+                if (badgeEl) {
+                    const showAdmin = (students[index][type][month].enteredByRole === 'Admin' && students[index][type][month].amount !== "");
+                    badgeEl.classList.toggle('hidden', !showAdmin);
+                }
             } else {
                 students[index][type][month][field] = value;
             }
@@ -1702,7 +1906,13 @@
                     <td class="sticky-col-2 px-3 py-3 align-top border-l border-b border-gray-100">
                         ${renderStudentProfileBox(student, index, true)}
                     </td>
-                    <td class="px-4 py-3 align-top">
+                    <td class="px-4 py-3 text-center align-top whitespace-nowrap border-l border-gray-100">
+                        <div class="flex justify-center gap-1.5 ${disabledClass}">
+                            <button id="btn-present-${index}" onclick="window.markAttendance(${index}, 'Có mặt')" class="px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${btnPresentClass}">Có mặt</button>
+                            <button id="btn-absent-${index}" onclick="window.markAttendance(${index}, 'Vắng')" class="px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${btnAbsentClass}">Vắng</button>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 align-top border-l border-gray-100">
                         <span class="text-xs font-bold ${isQuit ? 'text-gray-700 border-gray-300' : 'text-blue-700 bg-blue-50 border-blue-100'} px-2 py-1 rounded border inline-flex items-center gap-1">
                             ${student.belt || 'Cấp 10'}
                             <button onclick="window.openBeltModal(${index})" class="text-gray-400 hover:text-blue-600 ml-1">✏️</button>
@@ -1724,12 +1934,6 @@
                     <td class="px-4 py-3 align-top">
                         <input type="text" value="${(dayData.note || '').replace(/"/g, '&quot;')}" onchange="window.updateHLVNote(${index}, this.value)" placeholder="Nhập ghi chú..." class="w-full text-xs border border-gray-300 rounded p-1.5 focus:border-blue-500 outline-none ${disabledClass} ${isQuit ? 'bg-transparent' : ''}">
                     </td>
-                    <td class="px-4 py-3 text-right align-top whitespace-nowrap">
-                        <div class="flex justify-end gap-1.5 ${disabledClass}">
-                            <button id="btn-present-${index}" onclick="window.markAttendance(${index}, 'Có mặt')" class="px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${btnPresentClass}">Có mặt</button>
-                            <button id="btn-absent-${index}" onclick="window.markAttendance(${index}, 'Vắng')" class="px-3 py-1.5 rounded text-xs font-bold border border-gray-300 transition ${btnAbsentClass}">Vắng</button>
-                        </div>
-                    </td>
                     <td id="handler-cell-${index}" class="px-4 py-3 text-left align-top whitespace-nowrap border-l border-gray-100">
                         <div class="text-xs font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded inline-block">👤 ${activeHandler}</div>
                         ${dayData.updatedBy ? `<div class="text-xs text-green-600 mt-1 font-medium">✓ Đã điểm danh/cập nhật</div>` : `<div class="text-xs text-gray-400 mt-1">Người tạo: ${student.createdBy || 'Hệ thống'}</div>`}
@@ -1743,6 +1947,8 @@
             const tbody = document.getElementById('tuitionTableBody');
             if (!tbody) return;
             const accMonth = document.getElementById('accMonth').value;
+            const filterAccClub = document.getElementById('filterAccClub') ? document.getElementById('filterAccClub').value : 'All';
+            const filterAccFeeStatus = document.getElementById('filterAccFeeStatus') ? document.getElementById('filterAccFeeStatus').value : 'All';
             const monthList = [-2, -1, 0, 1, 2].map(offset => getOffsetMonth(accMonth, offset));
 
             const trHeader = document.getElementById('tuitionHeaderRow');
@@ -1788,6 +1994,8 @@
                 const index = c.originalIndex;
                 const student = students[index];
                 if (!student) continue;
+                if (filterAccClub !== 'All' && student.club !== filterAccClub) continue;
+                if (!checkStudentMatchesFeeFilter(student, accMonth, filterAccFeeStatus)) continue;
 
                 filteredTuitionIndices.push(index);
                 const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
@@ -1799,18 +2007,25 @@
 
                 for (let idx = 0; idx < monthList.length; idx++) {
                     const m = monthList[idx];
-                    const t = (student.tuition && student.tuition[m]) ? student.tuition[m] : { status: "Chưa đóng", amount: "500000", date: "" };
+                    const hasTuitionRecord = Boolean(student.tuition && student.tuition[m]);
+                    const t = hasTuitionRecord ? student.tuition[m] : { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
                     const isPaid = t.status === "Đã đóng";
+
+                    const displayAmount = (hasTuitionRecord && t.amount && (t.enteredByRole || isPaid || t.date)) ? formatNumberInput(t.amount) : "";
+                    const isAdminEntered = (t.enteredByRole === 'Admin' && displayAmount !== "");
 
                     rowHtml += `<td class="px-3 py-3 border-l border-green-200 align-top ${isQuit ? '' : (idx === 2 ? 'bg-green-50' : '')}">
                         <div class="flex flex-col gap-1.5">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <span class="text-xs text-gray-600">Tiền:</span>
-                                <input type="text" inputmode="numeric" value="${formatNumberInput(t.amount)}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                            <div class="flex flex-col items-end">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <span class="text-xs text-gray-600">Tiền:</span>
+                                    <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                                </div>
+                                <div id="admin-fee-badge-tuition-${index}-${m}" class="${isAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                             </div>
                             <div class="flex items-center justify-end gap-1.5">
                                 <span class="text-xs text-gray-600">Ngày:</span>
-                                <input type="date" value="${t.date}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
+                                <input type="date" value="${t.date || ''}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
                             </div>
                             <div class="flex justify-end mt-0.5">
                                 <select onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -1822,17 +2037,24 @@
                     </td>`;
 
                     if ([3, 6, 9, 12].includes(parseInt(m.split('-')[1]))) {
-                        const ef = (student.examFee && student.examFee[m]) ? student.examFee[m] : { status: "Chưa đóng", amount: "250000", date: "" };
+                        const hasEfRecord = Boolean(student.examFee && student.examFee[m]);
+                        const ef = hasEfRecord ? student.examFee[m] : { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
                         const isEfPaid = ef.status === "Đã đóng";
+                        const displayEfAmount = (hasEfRecord && ef.amount && (ef.enteredByRole || isEfPaid || ef.date)) ? formatNumberInput(ef.amount) : "";
+                        const isEfAdminEntered = (ef.enteredByRole === 'Admin' && displayEfAmount !== "");
+
                         rowHtml += `<td class="px-3 py-3 border-l border-purple-200 align-top ${isQuit ? '' : 'bg-purple-50'}">
                             <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <span class="text-xs text-gray-600">Tiền:</span>
-                                    <input type="text" inputmode="numeric" value="${formatNumberInput(ef.amount)}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                                <div class="flex flex-col items-end">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <span class="text-xs text-gray-600">Tiền:</span>
+                                        <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayEfAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                                    </div>
+                                    <div id="admin-fee-badge-examFee-${index}-${m}" class="${isEfAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                                 </div>
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Ngày:</span>
-                                    <input type="date" value="${ef.date}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
+                                    <input type="date" value="${ef.date || ''}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
                                 </div>
                                 <div class="flex justify-end mt-0.5">
                                     <select onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isEfPaid ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -1848,6 +2070,8 @@
             }
 
             tbody.innerHTML = rows.join('');
+            const badgeEl = document.getElementById('accFilterCountBadge');
+            if (badgeEl) badgeEl.innerText = `${filteredTuitionIndices.length} võ sinh`;
             refreshTuitionColumnTotals();
         };
 
@@ -1856,7 +2080,11 @@
             if (!tbody) return;
             const adminMonth = document.getElementById('adminMonth').value; 
             const searchAdmin = document.getElementById('searchAdminName').value;
+            const filterAdminClub = document.getElementById('filterAdminClub') ? document.getElementById('filterAdminClub').value : 'All';
+            const filterAdminFeeStatus = document.getElementById('filterAdminFeeStatus') ? document.getElementById('filterAdminFeeStatus').value : 'All';
+
             const rows = [];
+            filteredAdminIndices = [];
             let stt = 1;
             
             for (let i = 0; i < sortedStudentsCache.length; i++) {
@@ -1866,7 +2094,10 @@
                 const index = c.originalIndex;
                 const student = students[index];
                 if (!student) continue;
+                if (filterAdminClub !== 'All' && student.club !== filterAdminClub) continue;
+                if (!checkStudentMatchesFeeFilter(student, adminMonth, filterAdminFeeStatus)) continue;
 
+                filteredAdminIndices.push(index);
                 const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
                 let daysAttended = 0;
                 if (student.dailyData) {
@@ -1877,7 +2108,7 @@
 
                 const t = (student.tuition && student.tuition[adminMonth]) ? student.tuition[adminMonth] : null;
                 const feeStatusHTML = (t && t.status === "Đã đóng")
-                    ? `<span class="text-green-600 font-bold">Đã đóng (${formatMoney(t.amount || 500000)})</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`
+                    ? `<span class="text-green-600 font-bold">Đã đóng (${t.amount ? formatMoney(t.amount) : 'Chưa nhập số tiền'})</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`
                     : `<span class="text-yellow-600 font-bold">Chưa đóng</span>`;
 
                 const unpaidMonths = getUnpaidMonthsList(student, adminMonth);
@@ -1911,6 +2142,8 @@
                     </tr>`);
             }
             tbody.innerHTML = rows.join('');
+            const badgeEl = document.getElementById('adminFilterCountBadge');
+            if (badgeEl) badgeEl.innerText = `${filteredAdminIndices.length} võ sinh`;
         };
 
         window.renderTrashTable = function() {
