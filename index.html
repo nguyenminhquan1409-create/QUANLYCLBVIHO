@@ -161,14 +161,15 @@
         <!-- ================= TAB 1: ĐIỂM DANH (HLV) ================= -->
         <div id="diemdanh" class="tab-content hidden w-full h-full flex flex-col min-h-0">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2 flex-shrink-0">
-                <div class="flex items-center gap-3 w-full sm:w-auto bg-white p-2 rounded-lg shadow-sm border">
+                <div class="flex items-center gap-2 w-full sm:w-auto bg-white p-2 rounded-lg shadow-sm border">
                     <h2 class="text-sm font-bold text-gray-800 hidden sm:block mr-1">Ngày điểm danh:</h2>
                     <input type="date" class="border-none bg-gray-50 rounded px-2 py-1 text-sm font-bold text-red-600 outline-none cursor-pointer" id="currentDate" onchange="window.renderAttendanceTable()">
+                    <span id="hlvFilterCountBadge" class="text-xs font-extrabold bg-red-50 text-red-700 px-2.5 py-1 rounded-md border border-red-200">0 võ sinh</span>
                 </div>
                 
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 shadow-sm">📤 Xuất Excel</button>
+                    <button onclick="window.openExcelModal('diemdanh')" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel HLV</button>
+                    <button onclick="window.exportHLVExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-yellow-600 shadow-sm" title="Xuất danh sách võ sinh theo đúng bộ lọc Thi cấp / Trạng thái đang chọn">📤 Xuất Excel HLV (Theo Lọc)</button>
                     <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
@@ -186,7 +187,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Trạng thái học:</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Trạng thái học (Lọc & Xuất Excel):</label>
                     <select id="filterStatus" onchange="window.renderAttendanceTable()" class="w-full border border-gray-300 rounded-md p-1.5 text-sm outline-none focus:border-red-500 font-medium">
                         <option value="All">- Tất cả trạng thái -</option>
                         <option value="Đang học">Đang học</option>
@@ -194,7 +195,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Lọc xét Thi cấp:</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Lọc xét Thi cấp (Lọc & Xuất Excel):</label>
                     <select id="filterExam" onchange="window.renderAttendanceTable()" class="w-full border border-gray-300 rounded-md p-1.5 text-sm outline-none focus:border-red-500 font-medium">
                         <option value="All">- Tất cả trạng thái thi -</option>
                         <option value="Chưa xét">Chưa xét</option>
@@ -250,7 +251,7 @@
                     <button onclick="window.exportFilteredStudentsExcel('hocphi')" class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-red-700 shadow-sm flex items-center gap-1" title="Tải danh sách võ sinh đang lọc trên bảng (VD: Danh sách chưa đóng tiền)">
                         📥 Tải DS Lọc
                     </button>
-                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel (12T)</button>
+                    <button onclick="window.openExcelModal('hocphi')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Kế Toán</button>
                     <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12T)</button>
                     <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
@@ -304,11 +305,8 @@
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 items-center w-full xl:w-auto justify-end">
-                    <button onclick="window.exportFilteredStudentsExcel('admin')" class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-red-700 shadow-sm flex items-center gap-1" title="Tải danh sách võ sinh đang lọc ra Excel">
-                        📥 Tải DS Lọc
-                    </button>
-                    <button onclick="window.openExcelModal()" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel</button>
-                    <button onclick="window.exportAccountingExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm">📤 Xuất Excel (12T)</button>
+                    <button onclick="window.openExcelModal('admin')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Admin</button>
+                    <button onclick="window.exportAdminExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm" title="Xuất báo cáo tổng hợp Admin theo đúng danh sách đang lọc">📤 Xuất Excel Admin (Theo Lọc)</button>
                     <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
@@ -450,25 +448,25 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: NHẬP EXCEL ================= -->
+    <!-- ================= MODAL: NHẬP EXCEL THEO TỪNG TAB ================= -->
     <div id="excelModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-xl bg-white m-4">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-lg font-bold text-green-700">📥 Nhập / Cập nhật từ Excel</h3>
+                <h3 id="excelModalTitle" class="text-lg font-bold text-green-700">📥 Nhập / Cập nhật từ Excel</h3>
                 <button onclick="window.toggleModal('excelModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
             <div class="space-y-4 mt-3">
                 <div class="bg-green-50 p-3.5 rounded-lg border border-green-200">
-                    <p class="text-xs font-bold text-green-800 mb-1.5">Bước 1: Tải File Mẫu Kế Toán (Có sẵn danh sách võ sinh)</p>
-                    <p class="text-xs text-gray-600 mb-3">File tải về sẽ có <b>đầy đủ thông tin võ sinh hiện có trên web</b> + 12 Tháng + 4 Kỳ Thi. Những tháng <b>Đã đóng</b> được giữ nguyên, những tháng <b>Chưa đóng</b> sẽ để trống để bạn nhập bổ sung.</p>
-                    <button onclick="window.downloadAccountingTemplate()" class="w-full bg-green-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">
-                        📥 1. Tải File Mẫu Kế Toán (Đủ Danh Sách + 12 Tháng)
+                    <p id="excelStep1Title" class="text-xs font-bold text-green-800 mb-1.5">Bước 1: Tải File Mẫu</p>
+                    <p id="excelStep1Desc" class="text-xs text-gray-600 mb-3"></p>
+                    <button id="excelDownloadTemplateBtn" onclick="window.downloadCurrentTabTemplate()" class="w-full bg-green-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">
+                        📥 1. Tải File Mẫu
                     </button>
                 </div>
                 
                 <div class="bg-gray-50 p-3.5 rounded-lg border border-gray-200">
                     <p class="text-xs font-bold text-gray-800 mb-1">Bước 2: Upload File Đã Điền Lên Web</p>
-                    <p class="text-xs text-gray-500 mb-3">Điền số tiền (VD: <b>500.000</b>) vào các ô trống của tháng đã đóng rồi tải file lên, hệ thống sẽ cập nhật tự động.</p>
+                    <p id="excelStep2Desc" class="text-xs text-gray-500 mb-3"></p>
                     <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="window.handleExcelUpload(event)">
                     <button onclick="document.getElementById('excelFileInput').click()" class="w-full bg-blue-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">
                         📤 2. Chọn File Excel Tải Lên Hệ Thống
@@ -708,6 +706,7 @@
         let currentUser = localStorage.getItem('currentUser');
         let currentRole = localStorage.getItem('currentRole');
         let activeTabId = 'diemdanh';
+        let currentExcelModalTab = 'diemdanh';
         const beltLevels = ["Cấp 10", "Cấp 9", "Cấp 8", "Cấp 7", "Cấp 6", "Cấp 5", "Cấp 4", "Cấp 3", "Cấp 2", "Cấp 1", "1 Đẳng", "2 Đẳng", "3 Đẳng", "4 Đẳng", "5 Đẳng", "6 Đẳng"];
         let currentEditingStudentIdx = null;
         let adminEditingStudentIdx = null;
@@ -719,6 +718,7 @@
         let students = [];
         let deletedStudents = [];
         let sortedStudentsCache = [];
+        let filteredHLVIndices = [];
         let filteredTuitionIndices = [];
         let filteredAdminIndices = [];
         let isDataLoaded = false;
@@ -819,8 +819,6 @@
 
                 const thumbImg = document.getElementById(`student-avatar-${targetIdx}`);
                 if (thumbImg) thumbImg.src = base64Data;
-                const delBadge = document.getElementById(`del-photo-badge-${targetIdx}`);
-                if (delBadge) delBadge.classList.remove('hidden');
 
                 const previewModal = document.getElementById('photoPreviewModal');
                 if (previewModal && !previewModal.classList.contains('hidden')) {
@@ -844,8 +842,6 @@
 
                 const thumbImg = document.getElementById(`student-avatar-${studentIdx}`);
                 if (thumbImg) thumbImg.src = defaultAvatarSVG;
-                const delBadge = document.getElementById(`del-photo-badge-${studentIdx}`);
-                if (delBadge) delBadge.classList.add('hidden');
 
                 const previewModal = document.getElementById('photoPreviewModal');
                 if (previewModal && !previewModal.classList.contains('hidden')) {
@@ -962,16 +958,12 @@
             return parts[parts.length - 1];
         }
 
+        // ĐÃ BỎ DẤU X (XÓA NHANH) TRÊN ẢNH ĐẠI DIỆN NGOÀI BẢNG ĐỂ TRÁNH HLV ẤN NHẦM
         function renderStudentProfileBox(student, editIndex = null, extraClubContact = false, isTrash = false, trashIdx = 0) {
             const hasPhoto = Boolean(student.photo);
             const avatarSrc = hasPhoto ? student.photo : defaultAvatarSVG;
             const previewIdx = isTrash ? trashIdx : editIndex;
             const clickPreviewAttr = previewIdx !== null ? `onclick="window.openPhotoPreviewModal(${previewIdx}, ${isTrash})"` : '';
-
-            const quickDeleteBadge = editIndex !== null ? `
-                <button id="del-photo-badge-${editIndex}" onclick="window.removeStudentPhoto(${editIndex}, event)" title="Xóa ảnh này" class="${hasPhoto ? '' : 'hidden'} absolute -top-1.5 -right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold shadow">
-                    &times;
-                </button>` : '';
 
             const actionBtns = editIndex !== null ? `
                 <div class="flex flex-wrap gap-1.5 mt-1.5">
@@ -991,8 +983,7 @@
             return `
                 <div class="flex items-start gap-2.5">
                     <div class="relative flex-shrink-0">
-                        <img ${editIndex !== null ? `id="student-avatar-${editIndex}"` : ''} src="${avatarSrc}" ${clickPreviewAttr} title="Bấm vào ảnh để phóng to hồ sơ" alt="Ảnh" class="w-12 h-12 rounded-lg avatar-center border border-gray-300 shadow-sm cursor-pointer hover:border-red-500 transition bg-gray-100">
-                        ${quickDeleteBadge}
+                        <img ${editIndex !== null ? `id="student-avatar-${editIndex}"` : ''} src="${avatarSrc}" ${clickPreviewAttr} title="Bấm vào ảnh để mở Thẻ Hồ Sơ Võ Sinh" alt="Ảnh" class="w-12 h-12 rounded-lg avatar-center border border-gray-300 shadow-sm cursor-pointer hover:border-red-500 transition bg-gray-100">
                     </div>
                     <div class="flex-1 min-w-0">
                         <div ${clickPreviewAttr} class="text-sm font-bold text-gray-900 uppercase cursor-pointer hover:text-red-600 leading-tight">${student.name}</div>
@@ -1090,7 +1081,6 @@
             const isPaidMonth = Boolean(student.tuition && student.tuition[targetMonth] && student.tuition[targetMonth].status === "Đã đóng");
 
             if (filterMode === 'unpaid_month') {
-                // Chỉ lọc võ sinh đang học, đã nhập học trước hoặc trong tháng đó và chưa đóng tiền tháng đó
                 if (isQuit) return false;
                 if (student.startDate && student.startDate.length >= 7 && student.startDate.slice(0, 7) > targetMonth) return false;
                 return !isPaidMonth;
@@ -1114,13 +1104,180 @@
             return true;
         }
 
-        // --- XUẤT DANH SÁCH VÕ SINH ĐANG LỌC (CHƯA ĐÓNG TIỀN / THEO BỘ LỌC) RA EXCEL ---
+        // ================= HỆ THỐNG NHẬP / XUẤT EXCEL RIÊNG THEO TỪNG TAB =================
+
+        // 1. XUẤT EXCEL TAB HLV (THÔNG MINH THEO BỘ LỌC THI CẤP / TRẠNG THÁI / CLB)
+        function generateHLVWorkbook(useFiltered = true) {
+            const selectedDate = document.getElementById('currentDate').value || new Date().toISOString().slice(0, 10);
+            const displayDate = formatDate(selectedDate);
+            const headers = [
+                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
+                `Điểm danh (${displayDate})`, "Cấp Đai", "Trạng thái", "Thi cấp", "Ghi chú HLV", "Người nhập"
+            ];
+
+            const sheetRows = [headers];
+            const targetIndices = useFiltered ? filteredHLVIndices : sortedStudentsCache.map(c => c.originalIndex);
+
+            if (targetIndices.length > 0) {
+                targetIndices.forEach((studentIdx, i) => {
+                    const st = students[studentIdx];
+                    if (!st) return;
+                    const dayData = getDailyData(st, selectedDate);
+                    const activeHandler = dayData.updatedBy || st.lastEditedBy || st.createdBy || 'Hệ thống';
+
+                    sheetRows.push([
+                        i + 1,
+                        st.name || "",
+                        st.gender || "Nam",
+                        st.dob || "",
+                        st.startDate || "",
+                        st.club || "Chưa phân CLB",
+                        st.parentName || "",
+                        st.parentRole || "Ba",
+                        st.phone || "",
+                        dayData.attendance || "Chưa điểm danh",
+                        st.belt || "Cấp 10",
+                        dayData.status || "Đang học",
+                        dayData.examStatus || "Chưa xét",
+                        dayData.note || "",
+                        activeHandler
+                    ]);
+                });
+            } else if (!useFiltered) {
+                sheetRows.push([
+                    1, "NGUYỄN VĂN A", "Nam", "2015-01-01", selectedDate,
+                    "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567",
+                    "Có mặt", "Cấp 10", "Đang học", "Được thi", "Tập tốt", currentUser || "HLV"
+                ]);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `HLV_${selectedDate}`);
+            return { wb, selectedDate, count: targetIndices.length };
+        }
+
+        window.exportHLVExcel = function() {
+            if (!filteredHLVIndices || filteredHLVIndices.length === 0) {
+                return alert("Không có võ sinh nào trong bộ lọc hiện tại của Tab HLV để xuất Excel!");
+            }
+            const { wb, selectedDate } = generateHLVWorkbook(true);
+            const filterClub = document.getElementById('filterClub').value;
+            const filterStatus = document.getElementById('filterStatus').value;
+            const filterExam = document.getElementById('filterExam').value;
+
+            let slugParts = ["DS_HLV"];
+            if (filterExam !== 'All') {
+                slugParts.push(removeVietnameseTones(filterExam).replace(/\s+/g, '_').toUpperCase());
+            }
+            if (filterStatus !== 'All') {
+                slugParts.push(removeVietnameseTones(filterStatus).replace(/\s+/g, '_').toUpperCase());
+            }
+            if (filterClub !== 'All') {
+                slugParts.push(removeVietnameseTones(filterClub).replace(/\s+/g, '_'));
+            }
+            slugParts.push(selectedDate);
+
+            XLSX.writeFile(wb, `${slugParts.join('_')}.xlsx`);
+        };
+
+        // 2. XUẤT EXCEL TAB ADMIN (TỔNG HỢP THEO BỘ LỌC)
+        function generateAdminWorkbook(useFiltered = true) {
+            const adminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
+            const [yStr, mStr] = adminMonth.split('-');
+            const displayMonth = mStr && yStr ? `${mStr}/${yStr}` : adminMonth;
+
+            const headers = [
+                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Cấp Đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
+                "Trạng thái học", `Số buổi đi học (${displayMonth})`,
+                `Học phí Tháng ${displayMonth}`, `Số tiền đã đóng (${displayMonth})`, `Ngày đóng (${displayMonth})`,
+                `Các tháng chưa đóng (Tính đến ${displayMonth})`, "Người tạo hồ sơ"
+            ];
+
+            const sheetRows = [headers];
+            const targetIndices = useFiltered ? filteredAdminIndices : sortedStudentsCache.map(c => c.originalIndex);
+
+            if (targetIndices.length > 0) {
+                targetIndices.forEach((studentIdx, idx) => {
+                    const st = students[studentIdx];
+                    if (!st) return;
+
+                    let daysAttended = 0;
+                    if (st.dailyData && adminMonth) {
+                        for (const [dateStr, data] of Object.entries(st.dailyData)) {
+                            if (dateStr.startsWith(adminMonth) && data.attendance === 'Có mặt') daysAttended++;
+                        }
+                    }
+
+                    const t = (st.tuition && st.tuition[adminMonth]) ? st.tuition[adminMonth] : null;
+                    const isPaid = t && t.status === "Đã đóng";
+                    const unpaidList = getUnpaidMonthsList(st, adminMonth).map(m => {
+                        const [y, mm] = m.split('-');
+                        return `Tháng ${mm}/${y}`;
+                    }).join(', ');
+
+                    sheetRows.push([
+                        idx + 1,
+                        st.name || "",
+                        st.gender || "Nam",
+                        st.dob || "",
+                        st.startDate || "",
+                        st.belt || "Cấp 10",
+                        st.club || "Chưa phân CLB",
+                        st.parentName || "",
+                        st.parentRole || "Ba",
+                        st.phone || "",
+                        getLatestStatus(st),
+                        daysAttended,
+                        isPaid ? "Đã đóng" : "Chưa đóng",
+                        (isPaid && t.amount) ? formatNumberInput(t.amount) : "",
+                        (isPaid && t.date) ? t.date : "",
+                        unpaidList || "Đã đóng đủ",
+                        st.createdBy || "Hệ thống"
+                    ]);
+                });
+            } else if (!useFiltered) {
+                sheetRows.push([
+                    1, "NGUYỄN VĂN A", "Nam", "2015-01-01", `${adminMonth}-01`,
+                    "Cấp 10", "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567",
+                    "Đang học", 8, "Đã đóng", "500.000", `${adminMonth}-05`, "Đã đóng đủ", "admin"
+                ]);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `TongHop_Admin_${mStr}_${yStr}`);
+            return { wb, adminMonth, mStr, yStr };
+        }
+
+        window.exportAdminExcel = function() {
+            if (!filteredAdminIndices || filteredAdminIndices.length === 0) {
+                return alert("Không có võ sinh nào trong danh sách lọc hiện tại của Tab Admin để xuất Excel!");
+            }
+            const { wb, mStr, yStr } = generateAdminWorkbook(true);
+            const filterMode = document.getElementById('filterAdminFeeStatus').value;
+            const clubFilter = document.getElementById('filterAdminClub').value;
+
+            let filterSlug = "Tong_Hop";
+            if (filterMode === 'unpaid_month') filterSlug = "Chua_Dong_Tien";
+            else if (filterMode === 'paid_month') filterSlug = "Da_Dong_Tien";
+            else if (filterMode === 'unpaid_any') filterSlug = "No_Cong_Don";
+
+            const clubSlug = clubFilter !== 'All' ? `_${removeVietnameseTones(clubFilter).replace(/\s+/g, '_')}` : '';
+            XLSX.writeFile(wb, `Bao_Cao_Admin_${filterSlug}_Thang_${mStr}_${yStr}${clubSlug}.xlsx`);
+        };
+
+        // 3. XUẤT DANH SÁCH LỌC CHO TAB KẾ TOÁN / ADMIN
         window.exportFilteredStudentsExcel = function(tabSource) {
-            const isAcc = tabSource === 'hocphi';
-            const targetMonth = isAcc ? document.getElementById('accMonth').value : document.getElementById('adminMonth').value;
-            const filterMode = isAcc ? document.getElementById('filterAccFeeStatus').value : document.getElementById('filterAdminFeeStatus').value;
-            const clubFilter = isAcc ? document.getElementById('filterAccClub').value : document.getElementById('filterAdminClub').value;
-            const indicesList = isAcc ? filteredTuitionIndices : filteredAdminIndices;
+            if (tabSource === 'admin') {
+                return window.exportAdminExcel();
+            }
+            const targetMonth = document.getElementById('accMonth').value;
+            const filterMode = document.getElementById('filterAccFeeStatus').value;
+            const clubFilter = document.getElementById('filterAccClub').value;
+            const indicesList = filteredTuitionIndices;
 
             if (!indicesList || indicesList.length === 0) {
                 return alert("Không có võ sinh nào trong danh sách lọc hiện tại để tải về!");
@@ -1130,21 +1287,9 @@
             const displayMonth = monthStr && yearStr ? `${monthStr}/${yearStr}` : targetMonth;
 
             const headers = [
-                "STT",
-                "Họ và tên",
-                "Giới tính",
-                "Ngày sinh",
-                "Ngày nhập học",
-                "Cấp đai",
-                "Câu lạc bộ",
-                "Tên Phụ huynh",
-                "Vai trò",
-                "SĐT Phụ huynh",
-                "Trạng thái học",
-                `Số buổi đi học (${displayMonth})`,
-                `Học phí Tháng ${displayMonth}`,
-                `Số tiền đã đóng (${displayMonth})`,
-                `Ngày đóng (${displayMonth})`,
+                "STT", "Họ và tên", "Giới tính", "Ngày sinh", "Ngày nhập học",
+                "Cấp đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
+                `Học phí Tháng ${displayMonth}`, `Số tiền đã đóng (${displayMonth})`, `Ngày đóng (${displayMonth})`,
                 `Các tháng nợ cộng dồn (Tính đến ${displayMonth})`
             ];
 
@@ -1153,13 +1298,6 @@
             indicesList.forEach((studentIdx, idx) => {
                 const st = students[studentIdx];
                 if (!st) return;
-
-                let daysAttended = 0;
-                if (st.dailyData && targetMonth) {
-                    for (const [dateStr, data] of Object.entries(st.dailyData)) {
-                        if (dateStr.startsWith(targetMonth) && data.attendance === 'Có mặt') daysAttended++;
-                    }
-                }
 
                 const t = (st.tuition && st.tuition[targetMonth]) ? st.tuition[targetMonth] : null;
                 const isPaid = t && t.status === "Đã đóng";
@@ -1183,8 +1321,6 @@
                     st.parentName || "",
                     st.parentRole || "",
                     st.phone || "",
-                    getLatestStatus(st),
-                    daysAttended,
                     statusStr,
                     amountStr,
                     datePaidStr,
@@ -1194,16 +1330,310 @@
 
             const ws = XLSX.utils.aoa_to_sheet(sheetRows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, `DS_Loc_${monthStr}_${yearStr}`);
+            XLSX.utils.book_append_sheet(wb, ws, `DS_KeToan_${monthStr}_${yearStr}`);
 
             let filterSlug = "Tat_Ca";
             if (filterMode === 'unpaid_month') filterSlug = "Chua_Dong_Hoc_Phi";
             else if (filterMode === 'paid_month') filterSlug = "Da_Dong_Hoc_Phi";
-            else if (filterMode === 'unpaid_any') filterSlug = "No_Cong_Don";
             else if (filterMode === 'unpaid_exam') filterSlug = "Chua_Dong_Le_Phi_Thi";
 
             const clubSlug = clubFilter !== 'All' ? `_${removeVietnameseTones(clubFilter).replace(/\s+/g, '_')}` : '';
-            XLSX.writeFile(wb, `Danh_Sach_${filterSlug}_Thang_${monthStr}_${yearStr}${clubSlug}.xlsx`);
+            XLSX.writeFile(wb, `DS_Ke_Toan_${filterSlug}_Thang_${monthStr}_${yearStr}${clubSlug}.xlsx`);
+        };
+
+        // 4. EXCEL KẾ TOÁN 12 THÁNG
+        function getSelectedAccountingYear() {
+            const accMonthVal = document.getElementById('accMonth') ? document.getElementById('accMonth').value : '';
+            if (accMonthVal && accMonthVal.includes('-')) return accMonthVal.split('-')[0];
+            return new Date().getFullYear().toString();
+        }
+
+        function generateAccountingWorkbook() {
+            const year = getSelectedAccountingYear();
+            const headers = [
+                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Cấp đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh"
+            ];
+
+            for (let m = 1; m <= 12; m++) {
+                const mm = String(m).padStart(2, '0');
+                headers.push(`Tháng ${mm}/${year}`);
+                if ([3, 6, 9, 12].includes(m)) {
+                    headers.push(`Lệ phí thi T${mm}/${year}`);
+                }
+            }
+
+            const sheetRows = [headers];
+
+            if (sortedStudentsCache.length > 0) {
+                sortedStudentsCache.forEach((item, i) => {
+                    const st = students[item.originalIndex];
+                    const rowArr = [
+                        i + 1,
+                        st.name || "",
+                        st.gender || "",
+                        st.dob || "",
+                        st.startDate || "",
+                        st.belt || "",
+                        st.club || "",
+                        st.parentName || "",
+                        st.parentRole || "",
+                        st.phone || ""
+                    ];
+
+                    for (let m = 1; m <= 12; m++) {
+                        const mm = String(m).padStart(2, '0');
+                        const mKey = `${year}-${mm}`;
+                        const t = (st.tuition && st.tuition[mKey]) ? st.tuition[mKey] : null;
+                        rowArr.push((t && t.status === "Đã đóng" && t.amount) ? formatNumberInput(t.amount) : "");
+
+                        if ([3, 6, 9, 12].includes(m)) {
+                            const ef = (st.examFee && st.examFee[mKey]) ? st.examFee[mKey] : null;
+                            rowArr.push((ef && ef.status === "Đã đóng" && ef.amount) ? formatNumberInput(ef.amount) : "");
+                        }
+                    }
+                    sheetRows.push(rowArr);
+                });
+            } else {
+                const emptySample = [1, "NGUYỄN VĂN A", "Nam", "2015-01-01", `${year}-01-01`, "Cấp 10", "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567"];
+                for (let m = 1; m <= 12; m++) {
+                    emptySample.push("");
+                    if ([3, 6, 9, 12].includes(m)) emptySample.push("");
+                }
+                sheetRows.push(emptySample);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `KeToan_${year}`);
+            return { wb, year };
+        }
+
+        window.exportAccountingExcel = function() {
+            const { wb, year } = generateAccountingWorkbook();
+            XLSX.writeFile(wb, `Bang_Hoc_Phi_Ke_Toan_12_Thang_${year}.xlsx`);
+        };
+
+        // 5. MỞ MODAL NHẬP EXCEL TÙY THEO TAB ĐANG CHỌN
+        window.openExcelModal = function(tabContext) {
+            currentExcelModalTab = tabContext || activeTabId;
+            const titleEl = document.getElementById('excelModalTitle');
+            const step1Title = document.getElementById('excelStep1Title');
+            const step1Desc = document.getElementById('excelStep1Desc');
+            const btnTemplate = document.getElementById('excelDownloadTemplateBtn');
+            const step2Desc = document.getElementById('excelStep2Desc');
+
+            if (currentExcelModalTab === 'diemdanh') {
+                const selectedDate = document.getElementById('currentDate').value;
+                titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab HLV)";
+                step1Title.innerText = "Bước 1: Tải File Mẫu Điểm Danh & Chuyên Môn HLV";
+                step1Desc.innerHTML = `File tải về gồm các cột của <b>Tab HLV</b> (Hồ sơ võ sinh, Điểm danh ngày <b>${formatDate(selectedDate)}</b>, Cấp Đai, Trạng thái học, Xét Thi cấp, Ghi chú HLV).`;
+                btnTemplate.innerText = "📥 1. Tải File Mẫu Tab HLV";
+                step2Desc.innerHTML = `Điền hoặc chỉnh sửa thông tin chuyên môn HLV, Cấp đai, Trạng thái, Thi cấp ("Được thi", "Không được thi", "Chưa xét"), Điểm danh ("Có mặt", "Vắng") rồi tải lên.`;
+            } else if (currentExcelModalTab === 'hocphi') {
+                titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab Kế Toán)";
+                step1Title.innerText = "Bước 1: Tải File Mẫu Kế Toán (12 Tháng + 4 Kỳ Thi)";
+                step1Desc.innerHTML = `File tải về có <b>đầy đủ thông tin võ sinh</b> + 12 Tháng học phí + 4 Kỳ lệ phí thi. Những tháng <b>Chưa đóng</b> để trống để Kế toán nhập số tiền.`;
+                btnTemplate.innerText = "📥 1. Tải File Mẫu Kế Toán (12 Tháng)";
+                step2Desc.innerHTML = `Điền số tiền (VD: <b>500.000</b>) vào các ô trống của tháng đã đóng rồi tải file lên hệ thống.`;
+            } else {
+                titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab Tổng Hợp Admin)";
+                step1Title.innerText = "Bước 1: Tải File Mẫu Tổng Hợp Admin";
+                step1Desc.innerHTML = `File tải về gồm toàn bộ thông tin hồ sơ, liên hệ, trạng thái học và học phí của tháng đang xem.`;
+                btnTemplate.innerText = "📥 1. Tải File Mẫu Tổng Hợp Admin";
+                step2Desc.innerHTML = `Bạn có thể tải lên File Mẫu Admin, File HLV hoặc File Kế Toán 12 tháng, hệ thống sẽ tự động nhận diện và cập nhật đầy đủ.`;
+            }
+
+            window.toggleModal('excelModal', 'open');
+        };
+
+        window.downloadCurrentTabTemplate = function() {
+            if (currentExcelModalTab === 'diemdanh') {
+                const { wb, selectedDate } = generateHLVWorkbook(false);
+                XLSX.writeFile(wb, `File_Mau_HLV_Diem_Danh_${selectedDate}.xlsx`);
+            } else if (currentExcelModalTab === 'hocphi') {
+                const { wb, year } = generateAccountingWorkbook();
+                XLSX.writeFile(wb, `File_Mau_Ke_Toan_Vo_Sinh_${year}.xlsx`);
+            } else {
+                const { wb, mStr, yStr } = generateAdminWorkbook(false);
+                XLSX.writeFile(wb, `File_Mau_Tong_Hop_Admin_${mStr}_${yStr}.xlsx`);
+            }
+        };
+
+        function parseExcelFeeCell(cellVal) {
+            if (cellVal === undefined || cellVal === null) return null;
+            const str = cellVal.toString().trim();
+            if (!str) return null;
+            const norm = removeVietnameseTones(str);
+            if (norm.includes("chua") || norm === "0" || norm === "khong") {
+                return { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
+            }
+            const digits = str.replace(/\D/g, '');
+            const amount = digits ? String(parseInt(digits, 10)) : "";
+            return { 
+                status: "Đã đóng", 
+                amount: amount, 
+                date: "", 
+                enteredByRole: (amount && currentRole === 'Admin') ? 'Admin' : '' 
+            };
+        }
+
+        // XỬ LÝ UPLOAD FILE EXCEL (NHẬN DIỆN THÔNG MINH CÁC CỘT CỦA TAB HLV, KẾ TOÁN, ADMIN)
+        window.handleExcelUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                if (jsonData.length === 0) return alert("File Excel trống hoặc định dạng không đúng!");
+
+                const defaultYear = getSelectedAccountingYear();
+                const selectedHLVDate = document.getElementById('currentDate').value || new Date().toISOString().slice(0, 10);
+                const selectedAdminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
+
+                let addedCount = 0;
+                let updatedCount = 0;
+
+                jsonData.forEach(row => {
+                    const rawName = (row["Họ và tên"] || row["HỌ VÀ TÊN"] || row["Tên"] || "").toString().trim().toUpperCase();
+                    if (!rawName) return;
+
+                    const phoneVal = (row["SĐT Phụ huynh"] || row["SĐT"] || "").toString().trim();
+                    const clubVal = (row["Câu lạc bộ"] || row["CLB"] || "").toString().trim();
+                    const genderVal = (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "").toString().trim();
+                    const dobVal = (row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "").toString().trim();
+                    const startVal = (row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "").toString().trim();
+                    const parentVal = (row["Tên Phụ huynh"] || "").toString().trim();
+                    const roleVal = (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "").toString().trim();
+                    const beltVal = (row["Cấp Đai"] || row["Cấp đai"] || row["Cấp đai ban đầu"] || "").toString().trim();
+
+                    let targetStudent = students.find(s => s && s.name && s.name.toUpperCase() === rawName);
+                    if (!targetStudent) {
+                        targetStudent = {
+                            name: rawName,
+                            gender: genderVal || "Nam",
+                            dob: dobVal,
+                            parentName: parentVal,
+                            parentRole: roleVal || "Ba",
+                            phone: phoneVal,
+                            belt: beltVal || "Cấp 10",
+                            club: clubVal || "Chưa phân CLB",
+                            startDate: startVal,
+                            createdBy: currentUser,
+                            dailyData: {}, tuition: {}, examFee: {}
+                        };
+                        students.push(targetStudent);
+                        addedCount++;
+                    } else {
+                        if (genderVal) targetStudent.gender = genderVal;
+                        if (dobVal) targetStudent.dob = dobVal;
+                        if (startVal) targetStudent.startDate = startVal;
+                        if (parentVal) targetStudent.parentName = parentVal;
+                        if (roleVal) targetStudent.parentRole = roleVal;
+                        if (phoneVal) targetStudent.phone = phoneVal;
+                        if (clubVal) targetStudent.club = clubVal;
+                        if (beltVal) targetStudent.belt = beltVal;
+                        if (!targetStudent.dailyData) targetStudent.dailyData = {};
+                        if (!targetStudent.tuition) targetStudent.tuition = {};
+                        if (!targetStudent.examFee) targetStudent.examFee = {};
+                        updatedCount++;
+                    }
+
+                    // Cập nhật các cột của Tab HLV (Trạng thái, Thi cấp, Ghi chú HLV, Điểm danh)
+                    const statusVal = (row["Trạng thái"] || row["Trạng thái học"] || "").toString().trim();
+                    const examStatusVal = (row["Thi cấp"] || row["Xét thi cấp"] || "").toString().trim();
+                    const noteVal = (row["Ghi chú HLV"] || row["Ghi chú"] || "").toString().trim();
+
+                    let attendanceVal = null;
+                    let attendanceTargetDate = selectedHLVDate;
+
+                    Object.keys(row).forEach(colKey => {
+                        const cleanKey = colKey.trim();
+
+                        // Nhận diện cột Điểm danh (VD: "Điểm danh" hoặc "Điểm danh (20/10/2026)")
+                        if (/^Điểm danh/i.test(cleanKey)) {
+                            const rawAtt = row[colKey].toString().trim();
+                            const normAtt = removeVietnameseTones(rawAtt);
+                            if (normAtt.includes("co mat") || normAtt === "co" || normAtt === "x" || normAtt === "1") {
+                                attendanceVal = "Có mặt";
+                            } else if (normAtt.includes("vang") || normAtt === "v" || normAtt === "0") {
+                                attendanceVal = "Vắng";
+                            }
+                            const dateMatch = cleanKey.match(/\((\d{2})\/(\d{2})\/(\d{4})\)/);
+                            if (dateMatch) {
+                                attendanceTargetDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+                            }
+                        }
+
+                        // Nhận diện cột Học phí Tháng (Tab Kế toán & Tab Admin)
+                        const matchMonth = cleanKey.match(/^Tháng\s*(\d{1,2})(?:\/(\d{4}))?$/i);
+                        if (matchMonth) {
+                            const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
+                            const yy = matchMonth[2] || defaultYear;
+                            const mKey = `${yy}-${mm}`;
+                            const parsed = parseExcelFeeCell(row[colKey]);
+                            if (parsed) {
+                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
+                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
+                            }
+                        }
+
+                        // Nhận diện cột Lệ phí thi
+                        const matchExam = cleanKey.match(/^Lệ phí thi\s*T?(\d{1,2})(?:\/(\d{4}))?$/i);
+                        if (matchExam) {
+                            const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
+                            const yy = matchExam[2] || defaultYear;
+                            const mKey = `${yy}-${mm}`;
+                            const parsed = parseExcelFeeCell(row[colKey]);
+                            if (parsed) {
+                                const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
+                                targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
+                            }
+                        }
+
+                        // Nhận diện cột Số tiền đã đóng ở File mẫu Admin
+                        const matchAdminAmt = cleanKey.match(/^Số tiền đã đóng\s*\((\d{2})\/(\d{4})\)$/i);
+                        if (matchAdminAmt) {
+                            const mKey = `${matchAdminAmt[2]}-${matchAdminAmt[1]}`;
+                            const parsed = parseExcelFeeCell(row[colKey]);
+                            if (parsed) {
+                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
+                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
+                            }
+                        }
+                    });
+
+                    if (statusVal || examStatusVal || noteVal || attendanceVal !== null) {
+                        if (!targetStudent.dailyData[attendanceTargetDate]) {
+                            targetStudent.dailyData[attendanceTargetDate] = { ...getDailyData(targetStudent, attendanceTargetDate) };
+                        }
+                        if (statusVal === "Đang học" || statusVal === "Nghỉ luôn") {
+                            targetStudent.dailyData[attendanceTargetDate].status = statusVal;
+                        }
+                        if (["Chưa xét", "Được thi", "Không được thi"].includes(examStatusVal)) {
+                            targetStudent.dailyData[attendanceTargetDate].examStatus = examStatusVal;
+                        }
+                        if (noteVal !== "") {
+                            targetStudent.dailyData[attendanceTargetDate].note = noteVal;
+                        }
+                        if (attendanceVal !== null) {
+                            targetStudent.dailyData[attendanceTargetDate].attendance = attendanceVal;
+                        }
+                        targetStudent.dailyData[attendanceTargetDate].updatedBy = currentUser;
+                    }
+                });
+
+                if (addedCount > 0 || updatedCount > 0) {
+                    set(ref(db, 'students'), students);
+                    alert(`Đã cập nhật dữ liệu từ Excel thành công!\n- Thêm mới: ${addedCount} võ sinh\n- Cập nhật dữ liệu: ${updatedCount} võ sinh.`);
+                    toggleModal('excelModal', 'close');
+                } else {
+                    alert("Không tìm thấy cột 'Họ và tên' hợp lệ!");
+                }
+                document.getElementById('excelFileInput').value = ""; 
+            };
+            reader.readAsArrayBuffer(file);
         };
 
         // ================= ĐĂNG NHẬP & PHÂN QUYỀN =================
@@ -1335,203 +1765,6 @@
             });
         };
 
-        // ================= EXCEL KẾ TOÁN 12 THÁNG =================
-        function getSelectedAccountingYear() {
-            const accMonthVal = document.getElementById('accMonth') ? document.getElementById('accMonth').value : '';
-            if (accMonthVal && accMonthVal.includes('-')) return accMonthVal.split('-')[0];
-            return new Date().getFullYear().toString();
-        }
-
-        window.openExcelModal = function() {
-            window.toggleModal('excelModal', 'open');
-        };
-
-        function generateAccountingWorkbook() {
-            const year = getSelectedAccountingYear();
-            const headers = [
-                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
-                "Cấp đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh"
-            ];
-
-            for (let m = 1; m <= 12; m++) {
-                const mm = String(m).padStart(2, '0');
-                headers.push(`Tháng ${mm}/${year}`);
-                if ([3, 6, 9, 12].includes(m)) {
-                    headers.push(`Lệ phí thi T${mm}/${year}`);
-                }
-            }
-
-            const sheetRows = [headers];
-
-            if (sortedStudentsCache.length > 0) {
-                sortedStudentsCache.forEach((item, i) => {
-                    const st = students[item.originalIndex];
-                    const rowArr = [
-                        i + 1,
-                        st.name || "",
-                        st.gender || "",
-                        st.dob || "",
-                        st.startDate || "",
-                        st.belt || "",
-                        st.club || "",
-                        st.parentName || "",
-                        st.parentRole || "",
-                        st.phone || ""
-                    ];
-
-                    for (let m = 1; m <= 12; m++) {
-                        const mm = String(m).padStart(2, '0');
-                        const mKey = `${year}-${mm}`;
-                        const t = (st.tuition && st.tuition[mKey]) ? st.tuition[mKey] : null;
-                        rowArr.push((t && t.status === "Đã đóng" && t.amount) ? formatNumberInput(t.amount) : "");
-
-                        if ([3, 6, 9, 12].includes(m)) {
-                            const ef = (st.examFee && st.examFee[mKey]) ? st.examFee[mKey] : null;
-                            rowArr.push((ef && ef.status === "Đã đóng" && ef.amount) ? formatNumberInput(ef.amount) : "");
-                        }
-                    }
-                    sheetRows.push(rowArr);
-                });
-            } else {
-                const emptySample = [1, "NGUYỄN VĂN A", "Nam", "2015-01-01", `${year}-01-01`, "Cấp 10", "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567"];
-                for (let m = 1; m <= 12; m++) {
-                    emptySample.push("");
-                    if ([3, 6, 9, 12].includes(m)) emptySample.push("");
-                }
-                sheetRows.push(emptySample);
-            }
-
-            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, `KeToan_${year}`);
-            return { wb, year };
-        }
-
-        window.downloadAccountingTemplate = function() {
-            const { wb, year } = generateAccountingWorkbook();
-            XLSX.writeFile(wb, `File_Mau_Ke_Toan_Vo_Sinh_${year}.xlsx`);
-        };
-
-        window.exportAccountingExcel = function() {
-            const { wb, year } = generateAccountingWorkbook();
-            XLSX.writeFile(wb, `Bang_Hoc_Phi_Ke_Toan_12_Thang_${year}.xlsx`);
-        };
-
-        function parseExcelFeeCell(cellVal) {
-            if (cellVal === undefined || cellVal === null) return null;
-            const str = cellVal.toString().trim();
-            if (!str) return null;
-            const norm = removeVietnameseTones(str);
-            if (norm.includes("chua") || norm === "0" || norm === "khong") {
-                return { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
-            }
-            const digits = str.replace(/\D/g, '');
-            const amount = digits ? String(parseInt(digits, 10)) : "";
-            return { 
-                status: "Đã đóng", 
-                amount: amount, 
-                date: "", 
-                enteredByRole: (amount && currentRole === 'Admin') ? 'Admin' : '' 
-            };
-        }
-
-        window.handleExcelUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-                if (jsonData.length === 0) return alert("File Excel trống hoặc định dạng không đúng!");
-
-                const defaultYear = getSelectedAccountingYear();
-                let addedCount = 0;
-                let updatedCount = 0;
-
-                jsonData.forEach(row => {
-                    const rawName = (row["Họ và tên"] || row["HỌ VÀ TÊN"] || row["Tên"] || "").toString().trim().toUpperCase();
-                    if (!rawName) return;
-
-                    const phoneVal = (row["SĐT Phụ huynh"] || row["SĐT"] || "").toString().trim();
-                    const clubVal = (row["Câu lạc bộ"] || row["CLB"] || "").toString().trim();
-                    const genderVal = (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "").toString().trim();
-                    const dobVal = (row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "").toString().trim();
-                    const startVal = (row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "").toString().trim();
-                    const parentVal = (row["Tên Phụ huynh"] || "").toString().trim();
-                    const roleVal = (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "").toString().trim();
-                    const beltVal = (row["Cấp đai"] || row["Cấp đai ban đầu"] || "").toString().trim();
-
-                    let targetStudent = students.find(s => s && s.name && s.name.toUpperCase() === rawName);
-                    if (!targetStudent) {
-                        targetStudent = {
-                            name: rawName,
-                            gender: genderVal || "Nam",
-                            dob: dobVal,
-                            parentName: parentVal,
-                            parentRole: roleVal || "Ba",
-                            phone: phoneVal,
-                            belt: beltVal || "Cấp 10",
-                            club: clubVal || "Chưa phân CLB",
-                            startDate: startVal,
-                            createdBy: currentUser,
-                            dailyData: {}, tuition: {}, examFee: {}
-                        };
-                        students.push(targetStudent);
-                        addedCount++;
-                    } else {
-                        if (genderVal) targetStudent.gender = genderVal;
-                        if (dobVal) targetStudent.dob = dobVal;
-                        if (startVal) targetStudent.startDate = startVal;
-                        if (parentVal) targetStudent.parentName = parentVal;
-                        if (roleVal) targetStudent.parentRole = roleVal;
-                        if (phoneVal) targetStudent.phone = phoneVal;
-                        if (clubVal) targetStudent.club = clubVal;
-                        if (beltVal) targetStudent.belt = beltVal;
-                        if (!targetStudent.tuition) targetStudent.tuition = {};
-                        if (!targetStudent.examFee) targetStudent.examFee = {};
-                        updatedCount++;
-                    }
-
-                    Object.keys(row).forEach(colKey => {
-                        const cleanKey = colKey.trim();
-                        const matchMonth = cleanKey.match(/^Tháng\s*(\d{1,2})(?:\/(\d{4}))?$/i);
-                        if (matchMonth) {
-                            const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
-                            const yy = matchMonth[2] || defaultYear;
-                            const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey]);
-                            if (parsed) {
-                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
-                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
-                            }
-                        }
-
-                        const matchExam = cleanKey.match(/^Lệ phí thi\s*T?(\d{1,2})(?:\/(\d{4}))?$/i);
-                        if (matchExam) {
-                            const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
-                            const yy = matchExam[2] || defaultYear;
-                            const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey]);
-                            if (parsed) {
-                                const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
-                                targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
-                            }
-                        }
-                    });
-                });
-
-                if (addedCount > 0 || updatedCount > 0) {
-                    set(ref(db, 'students'), students);
-                    alert(`Đã cập nhật dữ liệu từ Excel thành công!\n- Thêm mới: ${addedCount} võ sinh\n- Cập nhật thông tin & học phí: ${updatedCount} võ sinh.`);
-                    toggleModal('excelModal', 'close');
-                } else {
-                    alert("Không tìm thấy cột 'Họ và tên' hợp lệ!");
-                }
-                document.getElementById('excelFileInput').value = ""; 
-            };
-            reader.readAsArrayBuffer(file);
-        };
-
         // ================= LƯU TRỮ FIREBASE =================
         function saveSingleStudent(index, silent = false) {
             if (students[index]) {
@@ -1619,7 +1852,12 @@
         }
 
         window.updateStudentStatus = (idx, val) => setDailyField(idx, 'status', val, false);
-        window.updateExamStatus = (idx, val) => setDailyField(idx, 'examStatus', val, true);
+        window.updateExamStatus = (idx, val) => {
+            setDailyField(idx, 'examStatus', val, true);
+            if (document.getElementById('filterExam').value !== 'All') {
+                window.renderAttendanceTable();
+            }
+        };
         window.updateHLVNote = (idx, val) => setDailyField(idx, 'note', val, true);
 
         window.markAttendance = function(index, status) {
@@ -1882,6 +2120,7 @@
             const filterExam = document.getElementById('filterExam').value;
 
             const rows = [];
+            filteredHLVIndices = [];
             let stt = 1;
             
             for (let i = 0; i < sortedStudentsCache.length; i++) {
@@ -1895,6 +2134,7 @@
                 const dayData = getDailyData(student, selectedDate);
                 if ((filterStatus !== 'All' && dayData.status !== filterStatus) || (filterExam !== 'All' && dayData.examStatus !== filterExam)) continue;
 
+                filteredHLVIndices.push(index);
                 const isQuit = dayData.status === 'Nghỉ luôn';
                 const disabledClass = isQuit ? 'opacity-50 pointer-events-none' : '';
                 const btnPresentClass = dayData.attendance === 'Có mặt' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-green-50';
@@ -1941,6 +2181,8 @@
                 </tr>`);
             }
             tbody.innerHTML = rows.join('');
+            const hlvBadge = document.getElementById('hlvFilterCountBadge');
+            if (hlvBadge) hlvBadge.innerText = `${filteredHLVIndices.length} võ sinh`;
         };
 
         window.renderTuitionTable = function() {
