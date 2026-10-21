@@ -53,12 +53,28 @@
 
         tbody tr.bg-white .sticky-col-1,
         tbody tr.bg-white .sticky-col-2 { background-color: #ffffff; }
+        tbody tr.bg-yellow-50 .sticky-col-1,
+        tbody tr.bg-yellow-50 .sticky-col-2 { background-color: #fefce8; }
         tbody tr.bg-red-100 .sticky-col-1,
         tbody tr.bg-red-100 .sticky-col-2 { background-color: #fee2e2; }
         tbody tr:hover .sticky-col-1,
         tbody tr:hover .sticky-col-2 { background-color: #f9fafb; }
+        tbody tr.bg-yellow-50:hover .sticky-col-1,
+        tbody tr.bg-yellow-50:hover .sticky-col-2 { background-color: #fef9c3; }
         tbody tr.bg-red-100:hover .sticky-col-1,
         tbody tr.bg-red-100:hover .sticky-col-2 { background-color: #fecaca; }
+
+        /* Tô cam màu nền cho các võ sinh trùng nhau cả 5 thông tin */
+        tbody tr.duplicate-orange-row,
+        tbody tr.duplicate-orange-row .sticky-col-1,
+        tbody tr.duplicate-orange-row .sticky-col-2 {
+            background-color: #fed7aa !important;
+        }
+        tbody tr.duplicate-orange-row:hover,
+        tbody tr.duplicate-orange-row:hover .sticky-col-1,
+        tbody tr.duplicate-orange-row:hover .sticky-col-2 {
+            background-color: #fdba74 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen w-screen overflow-hidden flex flex-col relative m-0 p-0">
@@ -123,10 +139,14 @@
                 <img id="headerLogoImg" src="" onclick="window.triggerLogoUpload()" title="Logo CLB Vĩ Hồ" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain">
                 <div class="font-extrabold text-xl sm:text-2xl text-red-600 tracking-wide">TAEKWONDO VĨ HỒ</div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- NÚT DỮ LIỆU TỔNG CHỈ HIỆN CHO ADMIN VÀ KẾ TOÁN -->
+                <button id="btnMasterDataHeader" onclick="window.exportMasterDataExcel()" class="hidden bg-purple-700 hover:bg-purple-800 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-sm transition items-center gap-1" title="Tải 1 file Excel gồm các Sheet dữ liệu tổng hợp (Chỉ Admin & Kế Toán)">
+                    📦 DỮ LIỆU TỔNG
+                </button>
                 <span id="studentCountBadge" class="hidden sm:inline-block text-xs font-bold bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full">0 võ sinh</span>
                 <span id="welcomeUser" class="text-sm font-bold text-gray-700">Chưa đăng nhập</span>
-                <button onclick="logout()" class="text-sm text-red-600 font-medium hover:underline border-l pl-4 ml-2">Đăng xuất</button>
+                <button onclick="logout()" class="text-sm text-red-600 font-medium hover:underline border-l pl-3 ml-1">Đăng xuất</button>
             </div>
         </div>
     </header>
@@ -143,6 +163,9 @@
                 </button>
                 <button id="nav-admin" onclick="switchTab('admin')" class="tab-btn hidden text-gray-500 hover:text-gray-700 py-3.5 px-2 text-sm font-bold whitespace-nowrap">
                     👑 Tổng hợp (Admin)
+                </button>
+                <button id="nav-membercode" onclick="switchTab('membercode')" class="tab-btn hidden text-gray-500 hover:text-gray-700 py-3.5 px-2 text-sm font-bold whitespace-nowrap">
+                    🪪 Mã hội viên (Admin)
                 </button>
                 <button id="nav-accounts" onclick="switchTab('accounts')" class="tab-btn hidden text-gray-500 hover:text-gray-700 py-3.5 px-2 text-sm font-bold whitespace-nowrap">
                     🔑 Cấp quyền (Admin)
@@ -191,6 +214,7 @@
                     <select id="filterStatus" onchange="window.renderAttendanceTable()" class="w-full border border-gray-300 rounded-md p-1.5 text-sm outline-none focus:border-red-500 font-medium">
                         <option value="All">- Tất cả trạng thái -</option>
                         <option value="Đang học">Đang học</option>
+                        <option value="Tạm nghỉ">Tạm nghỉ</option>
                         <option value="Nghỉ luôn">Nghỉ luôn</option>
                     </select>
                 </div>
@@ -248,6 +272,9 @@
                 </div>
                 
                 <div class="flex flex-wrap gap-1.5 w-full lg:w-auto justify-end">
+                    <button onclick="window.exportMasterDataExcel()" class="bg-purple-700 text-white px-3 py-1.5 rounded-md text-xs font-extrabold hover:bg-purple-800 shadow-sm flex items-center gap-1" title="Tải 1 file Excel gồm đủ các Sheet dữ liệu tổng">
+                        📦 DỮ LIỆU TỔNG
+                    </button>
                     <button onclick="window.exportFilteredStudentsExcel('hocphi')" class="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-red-700 shadow-sm flex items-center gap-1" title="Tải danh sách võ sinh đang lọc trên bảng (VD: Danh sách chưa đóng tiền)">
                         📥 Tải DS Lọc
                     </button>
@@ -305,6 +332,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 items-center w-full xl:w-auto justify-end">
+                    <button onclick="window.exportMasterDataExcel()" class="bg-purple-700 text-white px-3 py-1.5 rounded-md text-xs font-extrabold hover:bg-purple-800 shadow-sm" title="Tải 1 file Excel gồm đủ các Sheet dữ liệu tổng">📦 DỮ LIỆU TỔNG</button>
                     <button onclick="window.openExcelModal('admin')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Admin</button>
                     <button onclick="window.exportAdminExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm" title="Xuất báo cáo tổng hợp Admin theo đúng danh sách đang lọc">📤 Xuất Excel Admin (Theo Lọc)</button>
                     <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
@@ -325,6 +353,42 @@
                         </tr>
                     </thead>
                     <tbody id="adminTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= TAB MỚI: MÃ HỘI VIÊN (CHỈ ADMIN) ================= -->
+        <div id="membercode" class="tab-content hidden w-full h-full flex flex-col min-h-0">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 mb-3 flex-shrink-0 bg-white p-2.5 rounded-lg shadow-sm border">
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <h2 class="text-base font-extrabold text-indigo-800 mr-2">🪪 Quản Lý Mã Hội Viên</h2>
+                    <div class="w-full sm:w-64">
+                        <input type="text" id="searchMemberCodeName" oninput="window.debouncedRender('membercode')" placeholder="🔍 Tìm Họ tên hoặc Mã hội viên..." class="w-full border border-indigo-300 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-indigo-600 bg-indigo-50">
+                    </div>
+                    <select id="filterMemberCodeClub" onchange="window.renderMemberCodeTable()" class="border border-gray-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 outline-none focus:border-indigo-600">
+                        <option value="All">- Tất cả CLB -</option>
+                    </select>
+                    <span id="memberCodeCountBadge" class="text-xs font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-1.5 rounded-md border border-indigo-200">0 võ sinh</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 w-full lg:w-auto justify-end">
+                    <button onclick="window.openExcelModal('membercode')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Mã Hội Viên</button>
+                    <button onclick="window.exportMemberCodeExcel()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-indigo-700 shadow-sm">📤 Xuất Excel Mã Hội Viên</button>
+                    <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
+                </div>
+            </div>
+
+            <div class="bg-white shadow rounded-lg overflow-auto flex-1 min-h-0 w-full border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-indigo-50">
+                        <tr>
+                            <th class="sticky-col-1 bg-indigo-50 px-2 py-3 text-center text-xs font-bold text-indigo-800 uppercase border-b border-indigo-200">STT</th>
+                            <th class="sticky-col-2 bg-indigo-50 px-3 py-3 text-left text-xs font-bold text-indigo-800 uppercase whitespace-nowrap border-l border-b border-indigo-200">Hồ sơ Võ sinh (Tab HLV)</th>
+                            <th class="bg-indigo-50 px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase whitespace-nowrap border-l border-b border-indigo-200" style="min-width: 200px;">Mã Hội Viên</th>
+                            <th class="bg-indigo-50 px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase whitespace-nowrap border-l border-b border-indigo-200">Cấp Đai</th>
+                            <th class="bg-indigo-50 px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase whitespace-nowrap border-l border-b border-indigo-200">Trạng thái học</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberCodeTableBody" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
             </div>
         </div>
@@ -440,6 +504,7 @@
                         <div><span class="text-gray-500">Trạng thái:</span> <b id="previewModalStatus" class="text-gray-800"></b></div>
                     </div>
                     <div class="border-t pt-2 text-xs space-y-1">
+                        <div><span class="text-gray-500">Mã hội viên:</span> <b id="previewModalMemberCode" class="text-indigo-700"></b></div>
                         <div><span class="text-gray-500">Phụ huynh:</span> <b id="previewModalParent" class="text-gray-800"></b></div>
                         <div><span class="text-gray-500">Số điện thoại:</span> <b id="previewModalPhone" class="text-red-600 text-sm"></b></div>
                     </div>
@@ -721,6 +786,7 @@
         let filteredHLVIndices = [];
         let filteredTuitionIndices = [];
         let filteredAdminIndices = [];
+        let filteredMemberCodeIndices = [];
         let isDataLoaded = false;
         let searchDebounceTimer = null;
         let skipNextFirebaseRender = false;
@@ -895,6 +961,7 @@
             document.getElementById('previewModalDOB').innerText = formatDate(st.dob);
             document.getElementById('previewModalStart').innerText = formatDate(st.startDate);
             document.getElementById('previewModalStatus').innerText = getLatestStatus(st);
+            document.getElementById('previewModalMemberCode').innerText = st.memberCode || 'Chưa cấp mã';
             document.getElementById('previewModalParent').innerText = `${st.parentName || 'Chưa cập nhật'} (${st.parentRole || '...'})`;
             document.getElementById('previewModalPhone').innerText = st.phone || 'Chưa có';
 
@@ -919,7 +986,7 @@
             window.toggleModal('photoPreviewModal', 'open');
         };
 
-        // --- CÁC HÀM ĐỊNH DẠNG SỐ TIỀN ---
+        // --- CÁC HÀM ĐỊNH DẠNG SỐ TIỀN & NGÀY THÁNG ---
         function parseRawNumber(val) {
             if (val === undefined || val === null || val === "") return 0;
             const digits = val.toString().replace(/\D/g, '');
@@ -947,6 +1014,17 @@
             return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
         }
 
+        function normalizeDateString(dateVal) {
+            if (!dateVal) return "";
+            const str = dateVal.toString().trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+            const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (slashMatch) {
+                return `${slashMatch[3]}-${String(slashMatch[2]).padStart(2, '0')}-${String(slashMatch[1]).padStart(2, '0')}`;
+            }
+            return str;
+        }
+
         function removeVietnameseTones(str) {
             if (!str) return "";
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().trim();
@@ -958,12 +1036,49 @@
             return parts[parts.length - 1];
         }
 
-        // ĐÃ BỎ DẤU X (XÓA NHANH) TRÊN ẢNH ĐẠI DIỆN NGOÀI BẢNG ĐỂ TRÁNH HLV ẤN NHẦM
+        // --- HÀM ĐỐI CHIẾU 5 THÔNG TIN: HỌ VÀ TÊN - GIỚI TÍNH - NGÀY SINH - CÂU LẠC BỘ - CẤP ĐAI ---
+        function getStudentFiveFieldsKey(st) {
+            if (!st) return "";
+            const nameNorm = removeVietnameseTones((st.name || "").toString().toUpperCase().replace(/\s+/g, ' ').trim());
+            const genderNorm = removeVietnameseTones((st.gender || "Nam").toString().trim());
+            const dobNorm = normalizeDateString(st.dob || "");
+            const clubNorm = removeVietnameseTones((st.club || "Chưa phân CLB").toString().replace(/\s+/g, ' ').trim());
+            const beltNorm = removeVietnameseTones((st.belt || "Cấp 10").toString().replace(/\s+/g, ' ').trim());
+            return `${nameNorm}|${genderNorm}|${dobNorm}|${clubNorm}|${beltNorm}`;
+        }
+
+        function isSameFiveFields(stA, stB) {
+            if (!stA || !stB) return false;
+            return getStudentFiveFieldsKey(stA) === getStudentFiveFieldsKey(stB);
+        }
+
+        // Tự động rà soát và đánh dấu màu cam cho các cặp võ sinh trùng cả 5 thông tin
+        function recalculateFiveFieldDuplicates() {
+            const keyCountMap = {};
+            for (let i = 0; i < students.length; i++) {
+                const st = students[i];
+                if (!st || !st.name) continue;
+                const key = getStudentFiveFieldsKey(st);
+                keyCountMap[key] = (keyCountMap[key] || 0) + 1;
+            }
+            for (let i = 0; i < students.length; i++) {
+                const st = students[i];
+                if (!st || !st.name) continue;
+                const key = getStudentFiveFieldsKey(st);
+                st.isDuplicate5 = keyCountMap[key] >= 2;
+            }
+        }
+
         function renderStudentProfileBox(student, editIndex = null, extraClubContact = false, isTrash = false, trashIdx = 0) {
             const hasPhoto = Boolean(student.photo);
             const avatarSrc = hasPhoto ? student.photo : defaultAvatarSVG;
             const previewIdx = isTrash ? trashIdx : editIndex;
             const clickPreviewAttr = previewIdx !== null ? `onclick="window.openPhotoPreviewModal(${previewIdx}, ${isTrash})"` : '';
+
+            const duplicateBadge = (!isTrash && student.isDuplicate5) ? `
+                <span class="inline-block bg-orange-600 text-white text-xs font-extrabold px-2 py-0.5 rounded shadow-sm mt-1">
+                    ⚠️ Trùng 5 thông tin
+                </span>` : '';
 
             const actionBtns = editIndex !== null ? `
                 <div class="flex flex-wrap gap-1.5 mt-1.5">
@@ -990,6 +1105,7 @@
                         <div class="text-xs text-gray-600 mt-0.5">${student.gender || 'Nam'} | Sinh: ${formatDate(student.dob)}</div>
                         <div class="text-xs text-green-700 font-semibold mt-0.5">Nhập học: ${formatDate(student.startDate)}</div>
                         ${extraInfo}
+                        ${duplicateBadge}
                         ${actionBtns}
                     </div>
                 </div>
@@ -1005,6 +1121,7 @@
         }
 
         function rebuildStudentsCache() {
+            recalculateFiveFieldDuplicates();
             const validList = [];
             for (let i = 0; i < students.length; i++) {
                 const st = students[i];
@@ -1012,6 +1129,7 @@
                 const upperName = st.name.toString().toUpperCase().trim();
                 st.name = upperName;
                 const contactRaw = `${st.belt || ''} ${st.club || ''} ${st.parentName || ''} ${st.parentRole || ''} ${st.phone || ''}`;
+                const memberCodeRaw = `${upperName} ${st.memberCode || ''}`;
                 
                 validList.push({
                     originalIndex: i,
@@ -1019,7 +1137,9 @@
                     _normName: removeVietnameseTones(upperName),
                     _lowerName: upperName.toLowerCase(),
                     _normContact: removeVietnameseTones(contactRaw),
-                    _lowerContact: contactRaw.toLowerCase()
+                    _lowerContact: contactRaw.toLowerCase(),
+                    _normMemberSearch: removeVietnameseTones(memberCodeRaw),
+                    _lowerMemberSearch: memberCodeRaw.toLowerCase()
                 });
             }
 
@@ -1045,6 +1165,7 @@
                 if (tabName === 'diemdanh') window.renderAttendanceTable();
                 else if (tabName === 'hocphi') window.renderTuitionTable();
                 else if (tabName === 'admin') window.renderAdminTable();
+                else if (tabName === 'membercode') window.renderMemberCodeTable();
                 else if (tabName === 'trash') window.renderTrashTable();
             }, 80);
         };
@@ -1106,7 +1227,7 @@
 
         // ================= HỆ THỐNG NHẬP / XUẤT EXCEL RIÊNG THEO TỪNG TAB =================
 
-        // 1. XUẤT EXCEL TAB HLV (THÔNG MINH THEO BỘ LỌC THI CẤP / TRẠNG THÁI / CLB)
+        // 1. XUẤT EXCEL TAB HLV
         function generateHLVWorkbook(useFiltered = true) {
             const selectedDate = document.getElementById('currentDate').value || new Date().toISOString().slice(0, 10);
             const displayDate = formatDate(selectedDate);
@@ -1155,7 +1276,7 @@
             const ws = XLSX.utils.aoa_to_sheet(sheetRows);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `HLV_${selectedDate}`);
-            return { wb, selectedDate, count: targetIndices.length };
+            return { wb, ws, selectedDate, count: targetIndices.length };
         }
 
         window.exportHLVExcel = function() {
@@ -1182,14 +1303,64 @@
             XLSX.writeFile(wb, `${slugParts.join('_')}.xlsx`);
         };
 
-        // 2. XUẤT EXCEL TAB ADMIN (TỔNG HỢP THEO BỘ LỌC)
+        // 2. XUẤT EXCEL TAB MÃ HỘI VIÊN
+        function generateMemberCodeWorkbook(useFiltered = true) {
+            const headers = [
+                "STT", "Họ và tên", "Mã Hội Viên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh", "Cấp Đai", "Trạng thái học"
+            ];
+            const sheetRows = [headers];
+            const targetIndices = useFiltered ? filteredMemberCodeIndices : sortedStudentsCache.map(c => c.originalIndex);
+
+            if (targetIndices.length > 0) {
+                targetIndices.forEach((studentIdx, i) => {
+                    const st = students[studentIdx];
+                    if (!st) return;
+                    sheetRows.push([
+                        i + 1,
+                        st.name || "",
+                        st.memberCode || "",
+                        st.gender || "Nam",
+                        st.dob || "",
+                        st.startDate || "",
+                        st.club || "Chưa phân CLB",
+                        st.parentName || "",
+                        st.parentRole || "Ba",
+                        st.phone || "",
+                        st.belt || "Cấp 10",
+                        getLatestStatus(st)
+                    ]);
+                });
+            } else if (!useFiltered) {
+                sheetRows.push([
+                    1, "NGUYỄN VĂN A", "VH001", "Nam", "2015-01-01", "2026-01-01",
+                    "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567", "Cấp 10", "Đang học"
+                ]);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Ma_Hoi_Vien");
+            return { wb, ws };
+        }
+
+        window.exportMemberCodeExcel = function() {
+            if (!filteredMemberCodeIndices || filteredMemberCodeIndices.length === 0) {
+                return alert("Không có võ sinh nào trong danh sách Mã hội viên hiện tại để xuất Excel!");
+            }
+            const { wb } = generateMemberCodeWorkbook(true);
+            const todayStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Danh_Sach_Ma_Hoi_Vien_${todayStr}.xlsx`);
+        };
+
+        // 3. XUẤT EXCEL TAB ADMIN (TỔNG HỢP THEO BỘ LỌC)
         function generateAdminWorkbook(useFiltered = true) {
             const adminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
             const [yStr, mStr] = adminMonth.split('-');
             const displayMonth = mStr && yStr ? `${mStr}/${yStr}` : adminMonth;
 
             const headers = [
-                "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "STT", "Họ và tên", "Mã Hội Viên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
                 "Cấp Đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
                 "Trạng thái học", `Số buổi đi học (${displayMonth})`,
                 `Học phí Tháng ${displayMonth}`, `Số tiền đã đóng (${displayMonth})`, `Ngày đóng (${displayMonth})`,
@@ -1221,6 +1392,7 @@
                     sheetRows.push([
                         idx + 1,
                         st.name || "",
+                        st.memberCode || "",
                         st.gender || "Nam",
                         st.dob || "",
                         st.startDate || "",
@@ -1240,7 +1412,7 @@
                 });
             } else if (!useFiltered) {
                 sheetRows.push([
-                    1, "NGUYỄN VĂN A", "Nam", "2015-01-01", `${adminMonth}-01`,
+                    1, "NGUYỄN VĂN A", "VH001", "Nam", "2015-01-01", `${adminMonth}-01`,
                     "Cấp 10", "Homyland 2", "Nguyễn Văn B", "Ba", "0901234567",
                     "Đang học", 8, "Đã đóng", "500.000", `${adminMonth}-05`, "Đã đóng đủ", "admin"
                 ]);
@@ -1249,7 +1421,7 @@
             const ws = XLSX.utils.aoa_to_sheet(sheetRows);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `TongHop_Admin_${mStr}_${yStr}`);
-            return { wb, adminMonth, mStr, yStr };
+            return { wb, ws, adminMonth, mStr, yStr };
         }
 
         window.exportAdminExcel = function() {
@@ -1269,7 +1441,7 @@
             XLSX.writeFile(wb, `Bao_Cao_Admin_${filterSlug}_Thang_${mStr}_${yStr}${clubSlug}.xlsx`);
         };
 
-        // 3. XUẤT DANH SÁCH LỌC CHO TAB KẾ TOÁN / ADMIN
+        // 4. XUẤT DANH SÁCH LỌC CHO TAB KẾ TOÁN / ADMIN
         window.exportFilteredStudentsExcel = function(tabSource) {
             if (tabSource === 'admin') {
                 return window.exportAdminExcel();
@@ -1341,15 +1513,15 @@
             XLSX.writeFile(wb, `DS_Ke_Toan_${filterSlug}_Thang_${monthStr}_${yearStr}${clubSlug}.xlsx`);
         };
 
-        // 4. EXCEL KẾ TOÁN 12 THÁNG
+        // 5. EXCEL KẾ TOÁN 12 THÁNG
         function getSelectedAccountingYear() {
             const accMonthVal = document.getElementById('accMonth') ? document.getElementById('accMonth').value : '';
             if (accMonthVal && accMonthVal.includes('-')) return accMonthVal.split('-')[0];
             return new Date().getFullYear().toString();
         }
 
-        function generateAccountingWorkbook() {
-            const year = getSelectedAccountingYear();
+        function generateAccountingWorkbook(overrideYear = null) {
+            const year = overrideYear ? overrideYear.toString() : getSelectedAccountingYear();
             const headers = [
                 "STT", "Họ và tên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
                 "Cấp đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh"
@@ -1406,7 +1578,7 @@
             const ws = XLSX.utils.aoa_to_sheet(sheetRows);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `KeToan_${year}`);
-            return { wb, year };
+            return { wb, ws, year };
         }
 
         window.exportAccountingExcel = function() {
@@ -1414,7 +1586,81 @@
             XLSX.writeFile(wb, `Bang_Hoc_Phi_Ke_Toan_12_Thang_${year}.xlsx`);
         };
 
-        // 5. MỞ MODAL NHẬP EXCEL TÙY THEO TAB ĐANG CHỌN
+        // 6. NÚT "DỮ LIỆU TỔNG" - CHỈ ADMIN VÀ KẾ TOÁN MỚI TẢI ĐƯỢC
+        window.exportMasterDataExcel = function() {
+            if (currentRole !== 'Admin' && currentRole !== 'Kế Toán') {
+                return alert("Chỉ tài khoản Admin và Kế Toán mới có quyền tải Dữ Liệu Tổng!");
+            }
+
+            const wb = XLSX.utils.book_new();
+            const currentYearStr = new Date().getFullYear().toString();
+
+            // Sheet 1: HLV
+            const { ws: wsHLV } = generateHLVWorkbook(false);
+            XLSX.utils.book_append_sheet(wb, wsHLV, "HLV");
+
+            // Sheet 2: Kế Toán (Học phí 12 tháng + 4 kỳ thi của năm hiện tại)
+            const { ws: wsKeToan } = generateAccountingWorkbook(currentYearStr);
+            XLSX.utils.book_append_sheet(wb, wsKeToan, "Kế Toán");
+
+            // Sheet 3: Admin
+            const { ws: wsAdmin } = generateAdminWorkbook(false);
+            XLSX.utils.book_append_sheet(wb, wsAdmin, "Admin");
+
+            // Sheet 4: Mã Hội Viên
+            const { ws: wsMemberCode } = generateMemberCodeWorkbook(false);
+            XLSX.utils.book_append_sheet(wb, wsMemberCode, "Mã Hội Viên");
+
+            // Sheet 5: Cấp quyền
+            const accHeaders = ["STT", "Tên đăng nhập (SĐT)", "Mật khẩu", "Vai trò"];
+            const accRows = [accHeaders];
+            let accStt = 1;
+            (accounts || []).forEach(acc => {
+                if (!acc) return;
+                accRows.push([
+                    accStt++,
+                    acc.username || "",
+                    acc.password || "",
+                    acc.role || ""
+                ]);
+            });
+            const wsAccounts = XLSX.utils.aoa_to_sheet(accRows);
+            XLSX.utils.book_append_sheet(wb, wsAccounts, "Cấp quyền");
+
+            // Sheet 6: Võ sinh đã xóa
+            const trashHeaders = [
+                "STT", "Họ và tên", "Mã Hội Viên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
+                "Cấp Đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
+                "Thời gian xóa", "Người xóa"
+            ];
+            const trashRows = [trashHeaders];
+            let trashStt = 1;
+            (deletedStudents || []).forEach(st => {
+                if (!st) return;
+                trashRows.push([
+                    trashStt++,
+                    st.name || "",
+                    st.memberCode || "",
+                    st.gender || "Nam",
+                    st.dob || "",
+                    st.startDate || "",
+                    st.belt || "Cấp 10",
+                    st.club || "Chưa phân CLB",
+                    st.parentName || "",
+                    st.parentRole || "Ba",
+                    st.phone || "",
+                    st.deletedAt || "",
+                    st.deletedBy || "Admin"
+                ]);
+            });
+            const wsTrash = XLSX.utils.aoa_to_sheet(trashRows);
+            XLSX.utils.book_append_sheet(wb, wsTrash, "Võ sinh đã xóa");
+
+            const todayStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `DU_LIEU_TONG_CLB_VI_HO_${todayStr}.xlsx`);
+        };
+
+        // 7. MỞ MODAL NHẬP EXCEL TÙY THEO TAB ĐANG CHỌN
         window.openExcelModal = function(tabContext) {
             currentExcelModalTab = tabContext || activeTabId;
             const titleEl = document.getElementById('excelModalTitle');
@@ -1425,11 +1671,17 @@
 
             if (currentExcelModalTab === 'diemdanh') {
                 const selectedDate = document.getElementById('currentDate').value;
-                titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab HLV)";
+                titleEl.innerText = "📥 Nhập Danh Sách Excel (Tab HLV)";
                 step1Title.innerText = "Bước 1: Tải File Mẫu Điểm Danh & Chuyên Môn HLV";
                 step1Desc.innerHTML = `File tải về gồm các cột của <b>Tab HLV</b> (Hồ sơ võ sinh, Điểm danh ngày <b>${formatDate(selectedDate)}</b>, Cấp Đai, Trạng thái học, Xét Thi cấp, Ghi chú HLV).`;
                 btnTemplate.innerText = "📥 1. Tải File Mẫu Tab HLV";
-                step2Desc.innerHTML = `Điền hoặc chỉnh sửa thông tin chuyên môn HLV, Cấp đai, Trạng thái, Thi cấp ("Được thi", "Không được thi", "Chưa xét"), Điểm danh ("Có mặt", "Vắng") rồi tải lên.`;
+                step2Desc.innerHTML = `Hệ thống đối chiếu 5 thông tin (<b>Họ tên - Giới tính - Ngày sinh - CLB - Cấp đai</b>). Khác 1 thông tin sẽ thêm mới bình thường; nếu trùng cả 5 thông tin vẫn thêm vào danh sách và <b>tô nền màu cam cả 2 võ sinh</b>.`;
+            } else if (currentExcelModalTab === 'membercode') {
+                titleEl.innerText = "📥 Nhập / Cập nhật Mã Hội Viên (Admin)";
+                step1Title.innerText = "Bước 1: Tải File Mẫu Mã Hội Viên (Có sẵn danh sách)";
+                step1Desc.innerHTML = `File tải về có sẵn danh sách võ sinh hiện tại và cột <b>Mã Hội Viên</b> để Admin điền hoặc cập nhật hàng loạt.`;
+                btnTemplate.innerText = "📥 1. Tải File Mẫu Mã Hội Viên";
+                step2Desc.innerHTML = `Điền <b>Mã Hội Viên</b> vào file mẫu rồi tải lên. Hệ thống sẽ cập nhật Mã Hội Viên cho võ sinh khớp thông tin (hoặc thêm mới nếu chưa có).`;
             } else if (currentExcelModalTab === 'hocphi') {
                 titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab Kế Toán)";
                 step1Title.innerText = "Bước 1: Tải File Mẫu Kế Toán (12 Tháng + 4 Kỳ Thi)";
@@ -1437,11 +1689,11 @@
                 btnTemplate.innerText = "📥 1. Tải File Mẫu Kế Toán (12 Tháng)";
                 step2Desc.innerHTML = `Điền số tiền (VD: <b>500.000</b>) vào các ô trống của tháng đã đóng rồi tải file lên hệ thống.`;
             } else {
-                titleEl.innerText = "📥 Nhập / Cập nhật Excel (Tab Tổng Hợp Admin)";
+                titleEl.innerText = "📥 Nhập Danh Sách Excel (Tab Tổng Hợp Admin)";
                 step1Title.innerText = "Bước 1: Tải File Mẫu Tổng Hợp Admin";
-                step1Desc.innerHTML = `File tải về gồm toàn bộ thông tin hồ sơ, liên hệ, trạng thái học và học phí của tháng đang xem.`;
+                step1Desc.innerHTML = `File tải về gồm toàn bộ thông tin hồ sơ, Mã hội viên, liên hệ, trạng thái học và học phí của tháng đang xem.`;
                 btnTemplate.innerText = "📥 1. Tải File Mẫu Tổng Hợp Admin";
-                step2Desc.innerHTML = `Bạn có thể tải lên File Mẫu Admin, File HLV hoặc File Kế Toán 12 tháng, hệ thống sẽ tự động nhận diện và cập nhật đầy đủ.`;
+                step2Desc.innerHTML = `Đối chiếu 5 thông tin (<b>Họ tên - Giới tính - Ngày sinh - CLB - Cấp đai</b>). Nếu trùng cả 5 thông tin hệ thống vẫn cập nhật vào danh sách và <b>tô nền cam cả 2 võ sinh</b>.`;
             }
 
             window.toggleModal('excelModal', 'open');
@@ -1451,6 +1703,10 @@
             if (currentExcelModalTab === 'diemdanh') {
                 const { wb, selectedDate } = generateHLVWorkbook(false);
                 XLSX.writeFile(wb, `File_Mau_HLV_Diem_Danh_${selectedDate}.xlsx`);
+            } else if (currentExcelModalTab === 'membercode') {
+                const { wb } = generateMemberCodeWorkbook(false);
+                const todayStr = new Date().toISOString().slice(0, 10);
+                XLSX.writeFile(wb, `File_Mau_Ma_Hoi_Vien_${todayStr}.xlsx`);
             } else if (currentExcelModalTab === 'hocphi') {
                 const { wb, year } = generateAccountingWorkbook();
                 XLSX.writeFile(wb, `File_Mau_Ke_Toan_Vo_Sinh_${year}.xlsx`);
@@ -1478,7 +1734,88 @@
             };
         }
 
-        // XỬ LÝ UPLOAD FILE EXCEL (NHẬN DIỆN THÔNG MINH CÁC CỘT CỦA TAB HLV, KẾ TOÁN, ADMIN)
+        // HỖ TRỢ CẬP NHẬT DỮ LIỆU CHUYÊN MÔN & HỌC PHÍ TỪ 1 DÒNG EXCEL VÀO ĐỐI TƯỢNG VÕ SINH
+        function applyExcelRowExtraFieldsToStudent(targetStudent, row, selectedHLVDate, defaultYear) {
+            const statusVal = (row["Trạng thái"] || row["Trạng thái học"] || "").toString().trim();
+            const examStatusVal = (row["Thi cấp"] || row["Xét thi cấp"] || "").toString().trim();
+            const noteVal = (row["Ghi chú HLV"] || row["Ghi chú"] || "").toString().trim();
+
+            let attendanceVal = null;
+            let attendanceTargetDate = selectedHLVDate;
+
+            Object.keys(row).forEach(colKey => {
+                const cleanKey = colKey.trim();
+
+                if (/^Điểm danh/i.test(cleanKey)) {
+                    const rawAtt = row[colKey].toString().trim();
+                    const normAtt = removeVietnameseTones(rawAtt);
+                    if (normAtt.includes("co mat") || normAtt === "co" || normAtt === "x" || normAtt === "1") {
+                        attendanceVal = "Có mặt";
+                    } else if (normAtt.includes("vang") || normAtt === "v" || normAtt === "0") {
+                        attendanceVal = "Vắng";
+                    }
+                    const dateMatch = cleanKey.match(/\((\d{2})\/(\d{2})\/(\d{4})\)/);
+                    if (dateMatch) {
+                        attendanceTargetDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+                    }
+                }
+
+                const matchMonth = cleanKey.match(/^Tháng\s*(\d{1,2})(?:\/(\d{4}))?$/i);
+                if (matchMonth) {
+                    const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
+                    const yy = matchMonth[2] || defaultYear;
+                    const mKey = `${yy}-${mm}`;
+                    const parsed = parseExcelFeeCell(row[colKey]);
+                    if (parsed) {
+                        const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
+                        targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
+                    }
+                }
+
+                const matchExam = cleanKey.match(/^Lệ phí thi\s*T?(\d{1,2})(?:\/(\d{4}))?$/i);
+                if (matchExam) {
+                    const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
+                    const yy = matchExam[2] || defaultYear;
+                    const mKey = `${yy}-${mm}`;
+                    const parsed = parseExcelFeeCell(row[colKey]);
+                    if (parsed) {
+                        const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
+                        targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
+                    }
+                }
+
+                const matchAdminAmt = cleanKey.match(/^Số tiền đã đóng\s*\((\d{2})\/(\d{4})\)$/i);
+                if (matchAdminAmt) {
+                    const mKey = `${matchAdminAmt[2]}-${matchAdminAmt[1]}`;
+                    const parsed = parseExcelFeeCell(row[colKey]);
+                    if (parsed) {
+                        const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
+                        targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
+                    }
+                }
+            });
+
+            if (statusVal || examStatusVal || noteVal || attendanceVal !== null) {
+                if (!targetStudent.dailyData[attendanceTargetDate]) {
+                    targetStudent.dailyData[attendanceTargetDate] = { ...getDailyData(targetStudent, attendanceTargetDate) };
+                }
+                if (["Đang học", "Tạm nghỉ", "Nghỉ luôn"].includes(statusVal)) {
+                    targetStudent.dailyData[attendanceTargetDate].status = statusVal;
+                }
+                if (["Chưa xét", "Được thi", "Không được thi"].includes(examStatusVal)) {
+                    targetStudent.dailyData[attendanceTargetDate].examStatus = examStatusVal;
+                }
+                if (noteVal !== "") {
+                    targetStudent.dailyData[attendanceTargetDate].note = noteVal;
+                }
+                if (attendanceVal !== null) {
+                    targetStudent.dailyData[attendanceTargetDate].attendance = attendanceVal;
+                }
+                targetStudent.dailyData[attendanceTargetDate].updatedBy = currentUser;
+            }
+        }
+
+        // XỬ LÝ UPLOAD FILE EXCEL THEO ĐÚNG QUY TẮC 5 THÔNG TIN & CẬP NHẬT MÃ HỘI VIÊN
         window.handleExcelUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1490,143 +1827,115 @@
 
                 const defaultYear = getSelectedAccountingYear();
                 const selectedHLVDate = document.getElementById('currentDate').value || new Date().toISOString().slice(0, 10);
-                const selectedAdminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
 
                 let addedCount = 0;
                 let updatedCount = 0;
+                let duplicateFiveCount = 0;
 
                 jsonData.forEach(row => {
                     const rawName = (row["Họ và tên"] || row["HỌ VÀ TÊN"] || row["Tên"] || "").toString().trim().toUpperCase();
                     if (!rawName) return;
 
+                    const memberCodeVal = (row["Mã Hội Viên"] || row["Mã hội viên"] || "").toString().trim();
                     const phoneVal = (row["SĐT Phụ huynh"] || row["SĐT"] || "").toString().trim();
-                    const clubVal = (row["Câu lạc bộ"] || row["CLB"] || "").toString().trim();
-                    const genderVal = (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "").toString().trim();
-                    const dobVal = (row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "").toString().trim();
-                    const startVal = (row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "").toString().trim();
+                    const clubVal = (row["Câu lạc bộ"] || row["CLB"] || "").toString().trim() || "Chưa phân CLB";
+                    const genderVal = (row["Giới tính (Nam/Nữ)"] || row["Giới tính"] || "").toString().trim() || "Nam";
+                    const dobVal = normalizeDateString(row["Ngày sinh (YYYY-MM-DD)"] || row["Ngày sinh"] || "");
+                    const startVal = normalizeDateString(row["Ngày nhập học (YYYY-MM-DD)"] || row["Ngày nhập học"] || "");
                     const parentVal = (row["Tên Phụ huynh"] || "").toString().trim();
-                    const roleVal = (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "").toString().trim();
-                    const beltVal = (row["Cấp Đai"] || row["Cấp đai"] || row["Cấp đai ban đầu"] || "").toString().trim();
+                    const roleVal = (row["Vai trò (Ba/Mẹ)"] || row["Vai trò"] || "").toString().trim() || "Ba";
+                    const beltVal = (row["Cấp Đai"] || row["Cấp đai"] || row["Cấp đai ban đầu"] || "").toString().trim() || "Cấp 10";
 
-                    let targetStudent = students.find(s => s && s.name && s.name.toUpperCase() === rawName);
-                    if (!targetStudent) {
-                        targetStudent = {
-                            name: rawName,
-                            gender: genderVal || "Nam",
-                            dob: dobVal,
-                            parentName: parentVal,
-                            parentRole: roleVal || "Ba",
-                            phone: phoneVal,
-                            belt: beltVal || "Cấp 10",
-                            club: clubVal || "Chưa phân CLB",
-                            startDate: startVal,
-                            createdBy: currentUser,
-                            dailyData: {}, tuition: {}, examFee: {}
-                        };
-                        students.push(targetStudent);
-                        addedCount++;
-                    } else {
-                        if (genderVal) targetStudent.gender = genderVal;
-                        if (dobVal) targetStudent.dob = dobVal;
-                        if (startVal) targetStudent.startDate = startVal;
-                        if (parentVal) targetStudent.parentName = parentVal;
-                        if (roleVal) targetStudent.parentRole = roleVal;
-                        if (phoneVal) targetStudent.phone = phoneVal;
-                        if (clubVal) targetStudent.club = clubVal;
-                        if (beltVal) targetStudent.belt = beltVal;
-                        if (!targetStudent.dailyData) targetStudent.dailyData = {};
-                        if (!targetStudent.tuition) targetStudent.tuition = {};
-                        if (!targetStudent.examFee) targetStudent.examFee = {};
-                        updatedCount++;
+                    const candidateObj = {
+                        name: rawName,
+                        gender: genderVal,
+                        dob: dobVal,
+                        club: clubVal,
+                        belt: beltVal
+                    };
+
+                    // TRƯỜNG HỢP 1: Ở TAB MÃ HỘI VIÊN HOẶC TAB KẾ TOÁN -> Cập nhật Mã HV / Học phí cho võ sinh khớp 5 thông tin (hoặc khớp Họ tên), nếu chưa có thì thêm mới
+                    if (currentExcelModalTab === 'membercode' || currentExcelModalTab === 'hocphi') {
+                        let targetStudent = students.find(s => s && isSameFiveFields(s, candidateObj));
+                        if (!targetStudent) {
+                            const sameNameList = students.filter(s => s && s.name && s.name.toUpperCase() === rawName);
+                            if (sameNameList.length === 1) targetStudent = sameNameList[0];
+                        }
+
+                        if (targetStudent) {
+                            if (memberCodeVal !== "") targetStudent.memberCode = memberCodeVal;
+                            if (phoneVal) targetStudent.phone = phoneVal;
+                            if (parentVal) targetStudent.parentName = parentVal;
+                            if (startVal) targetStudent.startDate = startVal;
+                            if (!targetStudent.dailyData) targetStudent.dailyData = {};
+                            if (!targetStudent.tuition) targetStudent.tuition = {};
+                            if (!targetStudent.examFee) targetStudent.examFee = {};
+                            applyExcelRowExtraFieldsToStudent(targetStudent, row, selectedHLVDate, defaultYear);
+                            updatedCount++;
+                        } else {
+                            const newStudent = {
+                                name: rawName,
+                                memberCode: memberCodeVal || "",
+                                gender: genderVal,
+                                dob: dobVal,
+                                parentName: parentVal,
+                                parentRole: roleVal,
+                                phone: phoneVal,
+                                belt: beltVal,
+                                club: clubVal,
+                                startDate: startVal,
+                                createdBy: currentUser,
+                                dailyData: {}, tuition: {}, examFee: {}
+                            };
+                            applyExcelRowExtraFieldsToStudent(newStudent, row, selectedHLVDate, defaultYear);
+                            students.push(newStudent);
+                            addedCount++;
+                        }
+                        return;
                     }
 
-                    // Cập nhật các cột của Tab HLV (Trạng thái, Thi cấp, Ghi chú HLV, Điểm danh)
-                    const statusVal = (row["Trạng thái"] || row["Trạng thái học"] || "").toString().trim();
-                    const examStatusVal = (row["Thi cấp"] || row["Xét thi cấp"] || "").toString().trim();
-                    const noteVal = (row["Ghi chú HLV"] || row["Ghi chú"] || "").toString().trim();
-
-                    let attendanceVal = null;
-                    let attendanceTargetDate = selectedHLVDate;
-
-                    Object.keys(row).forEach(colKey => {
-                        const cleanKey = colKey.trim();
-
-                        // Nhận diện cột Điểm danh (VD: "Điểm danh" hoặc "Điểm danh (20/10/2026)")
-                        if (/^Điểm danh/i.test(cleanKey)) {
-                            const rawAtt = row[colKey].toString().trim();
-                            const normAtt = removeVietnameseTones(rawAtt);
-                            if (normAtt.includes("co mat") || normAtt === "co" || normAtt === "x" || normAtt === "1") {
-                                attendanceVal = "Có mặt";
-                            } else if (normAtt.includes("vang") || normAtt === "v" || normAtt === "0") {
-                                attendanceVal = "Vắng";
-                            }
-                            const dateMatch = cleanKey.match(/\((\d{2})\/(\d{2})\/(\d{4})\)/);
-                            if (dateMatch) {
-                                attendanceTargetDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
-                            }
-                        }
-
-                        // Nhận diện cột Học phí Tháng (Tab Kế toán & Tab Admin)
-                        const matchMonth = cleanKey.match(/^Tháng\s*(\d{1,2})(?:\/(\d{4}))?$/i);
-                        if (matchMonth) {
-                            const mm = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
-                            const yy = matchMonth[2] || defaultYear;
-                            const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey]);
-                            if (parsed) {
-                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
-                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
-                            }
-                        }
-
-                        // Nhận diện cột Lệ phí thi
-                        const matchExam = cleanKey.match(/^Lệ phí thi\s*T?(\d{1,2})(?:\/(\d{4}))?$/i);
-                        if (matchExam) {
-                            const mm = String(parseInt(matchExam[1], 10)).padStart(2, '0');
-                            const yy = matchExam[2] || defaultYear;
-                            const mKey = `${yy}-${mm}`;
-                            const parsed = parseExcelFeeCell(row[colKey]);
-                            if (parsed) {
-                                const existingDate = (targetStudent.examFee[mKey] && targetStudent.examFee[mKey].date) ? targetStudent.examFee[mKey].date : "";
-                                targetStudent.examFee[mKey] = { ...parsed, date: existingDate };
-                            }
-                        }
-
-                        // Nhận diện cột Số tiền đã đóng ở File mẫu Admin
-                        const matchAdminAmt = cleanKey.match(/^Số tiền đã đóng\s*\((\d{2})\/(\d{4})\)$/i);
-                        if (matchAdminAmt) {
-                            const mKey = `${matchAdminAmt[2]}-${matchAdminAmt[1]}`;
-                            const parsed = parseExcelFeeCell(row[colKey]);
-                            if (parsed) {
-                                const existingDate = (targetStudent.tuition[mKey] && targetStudent.tuition[mKey].date) ? targetStudent.tuition[mKey].date : "";
-                                targetStudent.tuition[mKey] = { ...parsed, date: existingDate };
-                            }
-                        }
-                    });
-
-                    if (statusVal || examStatusVal || noteVal || attendanceVal !== null) {
-                        if (!targetStudent.dailyData[attendanceTargetDate]) {
-                            targetStudent.dailyData[attendanceTargetDate] = { ...getDailyData(targetStudent, attendanceTargetDate) };
-                        }
-                        if (statusVal === "Đang học" || statusVal === "Nghỉ luôn") {
-                            targetStudent.dailyData[attendanceTargetDate].status = statusVal;
-                        }
-                        if (["Chưa xét", "Được thi", "Không được thi"].includes(examStatusVal)) {
-                            targetStudent.dailyData[attendanceTargetDate].examStatus = examStatusVal;
-                        }
-                        if (noteVal !== "") {
-                            targetStudent.dailyData[attendanceTargetDate].note = noteVal;
-                        }
-                        if (attendanceVal !== null) {
-                            targetStudent.dailyData[attendanceTargetDate].attendance = attendanceVal;
-                        }
-                        targetStudent.dailyData[attendanceTargetDate].updatedBy = currentUser;
+                    // TRƯỜNG HỢP 2: Ở TAB HLV HOẶC TAB ADMIN -> Đối chiếu 5 thông tin: Họ và tên - Giới tính - Ngày sinh - CLB - Cấp đai
+                    // - Khác 1 thông tin: vẫn thêm mới vào danh sách.
+                    // - Giống nhau cả 5 thông tin: vẫn thêm vào danh sách NHƯNG tô cam màu nền cả 2 võ sinh.
+                    const matchedExisting = students.filter(s => s && isSameFiveFields(s, candidateObj));
+                    const isDup5 = matchedExisting.length > 0;
+                    if (isDup5) {
+                        matchedExisting.forEach(s => { s.isDuplicate5 = true; });
+                        duplicateFiveCount++;
                     }
+
+                    const newStudent = {
+                        name: rawName,
+                        memberCode: memberCodeVal || "",
+                        gender: genderVal,
+                        dob: dobVal,
+                        parentName: parentVal,
+                        parentRole: roleVal,
+                        phone: phoneVal,
+                        belt: beltVal,
+                        club: clubVal,
+                        startDate: startVal,
+                        createdBy: currentUser,
+                        isDuplicate5: isDup5,
+                        dailyData: {}, tuition: {}, examFee: {}
+                    };
+
+                    if (selectedHLVDate) {
+                        newStudent.dailyData[selectedHLVDate] = { status: "Đang học", examStatus: "Chưa xét", note: "", attendance: null, updatedBy: currentUser };
+                    }
+                    applyExcelRowExtraFieldsToStudent(newStudent, row, selectedHLVDate, defaultYear);
+
+                    students.push(newStudent);
+                    addedCount++;
                 });
 
                 if (addedCount > 0 || updatedCount > 0) {
+                    recalculateFiveFieldDuplicates();
                     set(ref(db, 'students'), students);
-                    alert(`Đã cập nhật dữ liệu từ Excel thành công!\n- Thêm mới: ${addedCount} võ sinh\n- Cập nhật dữ liệu: ${updatedCount} võ sinh.`);
+                    let msg = `Đã xử lý dữ liệu Excel thành công!\n- Thêm vào danh sách: ${addedCount} võ sinh`;
+                    if (updatedCount > 0) msg += `\n- Cập nhật thông tin/Mã HV/Học phí: ${updatedCount} võ sinh`;
+                    if (duplicateFiveCount > 0) msg += `\n- Phát hiện trùng cả 5 thông tin: ${duplicateFiveCount} trường hợp (Đã tô nền màu cam để bạn kiểm tra).`;
+                    alert(msg);
                     toggleModal('excelModal', 'close');
                 } else {
                     alert("Không tìm thấy cột 'Họ và tên' hợp lệ!");
@@ -1695,7 +2004,7 @@
         };
 
         window.applyRole = function() {
-            ['nav-diemdanh', 'nav-hocphi', 'nav-admin', 'nav-accounts', 'nav-trash'].forEach(id => {
+            ['nav-diemdanh', 'nav-hocphi', 'nav-admin', 'nav-membercode', 'nav-accounts', 'nav-trash'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
 
@@ -1711,6 +2020,18 @@
                 }
             }
 
+            // Nút "DỮ LIỆU TỔNG" chỉ hiện ở tài khoản Admin và Kế Toán
+            const btnMasterHeader = document.getElementById('btnMasterDataHeader');
+            if (btnMasterHeader) {
+                if (currentRole === 'Admin' || currentRole === 'Kế Toán') {
+                    btnMasterHeader.classList.remove('hidden');
+                    btnMasterHeader.classList.add('flex');
+                } else {
+                    btnMasterHeader.classList.add('hidden');
+                    btnMasterHeader.classList.remove('flex');
+                }
+            }
+
             if (currentRole === 'HLV') {
                 document.getElementById('nav-diemdanh').classList.remove('hidden');
                 switchTab('diemdanh');
@@ -1718,7 +2039,7 @@
                 document.getElementById('nav-hocphi').classList.remove('hidden');
                 switchTab('hocphi');
             } else if (currentRole === 'Admin') {
-                ['nav-diemdanh', 'nav-hocphi', 'nav-admin', 'nav-accounts', 'nav-trash'].forEach(id => {
+                ['nav-diemdanh', 'nav-hocphi', 'nav-admin', 'nav-membercode', 'nav-accounts', 'nav-trash'].forEach(id => {
                     document.getElementById(id).classList.remove('hidden');
                 });
                 switchTab('admin');
@@ -1750,13 +2071,14 @@
             if (activeTabId === 'diemdanh') window.renderAttendanceTable();
             else if (activeTabId === 'hocphi') window.renderTuitionTable();
             else if (activeTabId === 'admin') window.renderAdminTable();
+            else if (activeTabId === 'membercode') window.renderMemberCodeTable();
             else if (activeTabId === 'accounts') renderAccountsTable();
             else if (activeTabId === 'trash') window.renderTrashTable();
         }
 
         window.updateClubFilterOptions = function() {
             const clubs = Array.from(new Set(students.map(s => s && s.club).filter(Boolean))).sort();
-            ['filterClub', 'filterAccClub', 'filterAdminClub'].forEach(selectId => {
+            ['filterClub', 'filterAccClub', 'filterAdminClub', 'filterMemberCodeClub'].forEach(selectId => {
                 const select = document.getElementById(selectId);
                 if (!select) return;
                 const currentVal = select.value;
@@ -1773,6 +2095,16 @@
             }
         }
 
+        // Cập nhật Mã hội viên trực tiếp ở Tab Mã hội viên (Admin)
+        window.updateMemberCode = function(index, val) {
+            if (currentRole !== 'Admin') return;
+            if (!students[index]) return;
+            students[index].memberCode = (val || "").trim();
+            students[index].lastEditedBy = currentUser;
+            rebuildStudentsCache();
+            saveSingleStudent(index, true);
+        };
+
         // ================= QUẢN LÝ XÓA / KHÔI PHỤC VÕ SINH =================
         window.deleteStudentByOriginalIndex = function(originalIdx) {
             if (currentRole !== 'Admin') return alert("Chỉ Admin mới có quyền xóa võ sinh!");
@@ -1783,6 +2115,7 @@
                 removed.deletedAt = new Date().toLocaleString('vi-VN');
                 removed.deletedBy = currentUser;
                 deletedStudents.push(removed);
+                recalculateFiveFieldDuplicates();
                 set(ref(db, 'students'), students);
                 set(ref(db, 'deletedStudents'), deletedStudents);
             }
@@ -1796,6 +2129,7 @@
             delete restored.deletedBy;
             restored.name = (restored.name || "").toUpperCase();
             students.push(restored);
+            recalculateFiveFieldDuplicates();
             set(ref(db, 'students'), students);
             set(ref(db, 'deletedStudents'), deletedStudents);
             alert(`Đã khôi phục võ sinh "${restored.name}" trở lại danh sách chính!`);
@@ -1898,6 +2232,7 @@
             const currentDateVal = document.getElementById('currentDate').value;
             const newStudent = {
                 name: rawName,
+                memberCode: "",
                 photo: tempAddPhotoBase64 || "",
                 gender: document.getElementById('inpGender').value || "Nam",
                 dob: document.getElementById('inpDOB').value || "",
@@ -1915,7 +2250,8 @@
             }
 
             students.push(newStudent);
-            saveSingleStudent(students.length - 1, false);
+            recalculateFiveFieldDuplicates();
+            set(ref(db, 'students'), students);
             toggleModal('addStudentModal', 'close'); 
             this.reset();
             tempAddPhotoBase64 = "";
@@ -1933,7 +2269,8 @@
         document.getElementById('editBeltForm').addEventListener('submit', function(e) {
             e.preventDefault();
             students[currentEditingStudentIdx].belt = document.getElementById('beltSelect').value;
-            setDailyField(currentEditingStudentIdx, 'updatedBy', currentUser, false);
+            recalculateFiveFieldDuplicates();
+            set(ref(db, 'students'), students);
             toggleModal('editBeltModal', 'close');
         });
 
@@ -1971,7 +2308,8 @@
             s.phone = document.getElementById('editPhone').value.trim() || "";
             s.lastEditedBy = currentUser;
 
-            setDailyField(adminEditingStudentIdx, 'updatedBy', currentUser, false);
+            recalculateFiveFieldDuplicates();
+            set(ref(db, 'students'), students);
             toggleModal('editStudentModal', 'close'); 
             alert("Đã cập nhật hồ sơ thành công!");
         });
@@ -2109,7 +2447,7 @@
             `).join('');
         }
 
-        // ================= RENDER 4 BẢNG CHÍNH =================
+        // ================= RENDER CÁC BẢNG CHÍNH =================
         window.renderAttendanceTable = function() {
             const tbody = document.getElementById('attendanceTableBody');
             if (!tbody) return;
@@ -2136,12 +2474,15 @@
 
                 filteredHLVIndices.push(index);
                 const isQuit = dayData.status === 'Nghỉ luôn';
+                const isTempBreak = dayData.status === 'Tạm nghỉ';
                 const disabledClass = isQuit ? 'opacity-50 pointer-events-none' : '';
+                const rowBgClass = student.isDuplicate5 ? 'duplicate-orange-row' : (isQuit ? 'bg-red-100' : (isTempBreak ? 'bg-yellow-50' : 'bg-white'));
+                const statusSelectClass = isQuit ? 'text-red-700 bg-red-200' : (isTempBreak ? 'text-yellow-800 bg-yellow-100 border-yellow-400' : 'text-green-600 bg-green-50');
                 const btnPresentClass = dayData.attendance === 'Có mặt' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-green-50';
                 const btnAbsentClass = dayData.attendance === 'Vắng' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-red-50';
                 const activeHandler = dayData.updatedBy || student.lastEditedBy || student.createdBy || 'Hệ thống';
 
-                rows.push(`<tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                rows.push(`<tr class="fast-row ${rowBgClass}">
                     <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
                     <td class="sticky-col-2 px-3 py-3 align-top border-l border-b border-gray-100">
                         ${renderStudentProfileBox(student, index, true)}
@@ -2159,8 +2500,9 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 align-top">
-                        <select onchange="window.updateStudentStatus(${index}, this.value)" class="text-xs border border-gray-300 rounded p-1.5 font-semibold outline-none ${isQuit ? 'text-red-700 bg-red-200' : 'text-green-600 bg-green-50'}">
-                            <option value="Đang học" ${!isQuit ? 'selected' : ''}>Đang học</option>
+                        <select onchange="window.updateStudentStatus(${index}, this.value)" class="text-xs border border-gray-300 rounded p-1.5 font-semibold outline-none ${statusSelectClass}">
+                            <option value="Đang học" ${dayData.status === 'Đang học' || (!isQuit && !isTempBreak) ? 'selected' : ''}>Đang học</option>
+                            <option value="Tạm nghỉ" ${isTempBreak ? 'selected' : ''}>Tạm nghỉ</option>
                             <option value="Nghỉ luôn" ${isQuit ? 'selected' : ''}>Nghỉ luôn</option>
                         </select>
                     </td>
@@ -2183,6 +2525,64 @@
             tbody.innerHTML = rows.join('');
             const hlvBadge = document.getElementById('hlvFilterCountBadge');
             if (hlvBadge) hlvBadge.innerText = `${filteredHLVIndices.length} võ sinh`;
+        };
+
+        // RENDER TAB MÃ HỘI VIÊN (CHỈ ADMIN)
+        window.renderMemberCodeTable = function() {
+            const tbody = document.getElementById('memberCodeTableBody');
+            if (!tbody) return;
+            const searchQuery = document.getElementById('searchMemberCodeName') ? document.getElementById('searchMemberCodeName').value : '';
+            const filterClub = document.getElementById('filterMemberCodeClub') ? document.getElementById('filterMemberCodeClub').value : 'All';
+
+            const rows = [];
+            filteredMemberCodeIndices = [];
+            let stt = 1;
+
+            for (let i = 0; i < sortedStudentsCache.length; i++) {
+                const c = sortedStudentsCache[i];
+                if (!fastMatchText(c._lowerMemberSearch, c._normMemberSearch, searchQuery)) continue;
+
+                const index = c.originalIndex;
+                const student = students[index];
+                if (!student || (filterClub !== 'All' && student.club !== filterClub)) continue;
+
+                filteredMemberCodeIndices.push(index);
+                const latestStatus = getLatestStatus(student);
+                const isQuit = latestStatus === 'Nghỉ luôn';
+                const isTempBreak = latestStatus === 'Tạm nghỉ';
+                const rowBgClass = student.isDuplicate5 ? 'duplicate-orange-row' : (isQuit ? 'bg-red-100' : (isTempBreak ? 'bg-yellow-50' : 'bg-white'));
+                const statusBadgeClass = isQuit
+                    ? 'bg-red-200 text-red-800 border-red-300'
+                    : (isTempBreak ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-green-100 text-green-700 border-green-200');
+
+                rows.push(`
+                    <tr class="fast-row ${rowBgClass}">
+                        <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
+                        <td class="sticky-col-2 px-3 py-3 align-top border-l border-b border-gray-100">
+                            ${renderStudentProfileBox(student, index, true)}
+                        </td>
+                        <td class="px-4 py-3 align-top border-l border-gray-100">
+                            <input type="text" value="${(student.memberCode || '').replace(/"/g, '&quot;')}" onchange="window.updateMemberCode(${index}, this.value)" placeholder="Nhập mã hội viên..." class="w-48 text-sm font-extrabold text-indigo-700 uppercase border border-indigo-300 rounded-md px-3 py-1.5 focus:border-indigo-600 outline-none bg-white shadow-sm">
+                            <div class="text-xs text-gray-500 mt-1">Tự động lưu khi nhập xong</div>
+                        </td>
+                        <td class="px-4 py-3 align-top border-l border-gray-100">
+                            <span class="text-xs font-bold text-blue-700 bg-blue-50 border-blue-100 px-2.5 py-1 rounded border inline-flex items-center gap-1">
+                                ${student.belt || 'Cấp 10'}
+                                <button onclick="window.openBeltModal(${index})" class="text-gray-400 hover:text-blue-600 ml-1">✏️</button>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 align-top border-l border-gray-100">
+                            <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${statusBadgeClass}">
+                                ${latestStatus}
+                            </span>
+                        </td>
+                    </tr>
+                `);
+            }
+
+            tbody.innerHTML = rows.join('');
+            const countEl = document.getElementById('memberCodeCountBadge');
+            if (countEl) countEl.innerText = `${filteredMemberCodeIndices.length} võ sinh`;
         };
 
         window.renderTuitionTable = function() {
@@ -2240,9 +2640,12 @@
                 if (!checkStudentMatchesFeeFilter(student, accMonth, filterAccFeeStatus)) continue;
 
                 filteredTuitionIndices.push(index);
-                const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
+                const latestStatus = getLatestStatus(student);
+                const isQuit = latestStatus === 'Nghỉ luôn';
+                const isTempBreak = latestStatus === 'Tạm nghỉ';
+                const rowBgClass = student.isDuplicate5 ? 'duplicate-orange-row' : (isQuit ? 'bg-red-100' : (isTempBreak ? 'bg-yellow-50' : 'bg-white'));
                 
-                let rowHtml = `<tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                let rowHtml = `<tr class="fast-row ${rowBgClass}">
                     <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
                     <td class="sticky-col-2 px-3 py-3 border-l border-b border-green-200 align-top">${renderStudentProfileBox(student, index, false)}</td>
                     <td class="px-4 py-3 border-l border-green-200 align-top">${renderStudentContactBox(student)}</td>`;
@@ -2256,18 +2659,18 @@
                     const displayAmount = (hasTuitionRecord && t.amount && (t.enteredByRole || isPaid || t.date)) ? formatNumberInput(t.amount) : "";
                     const isAdminEntered = (t.enteredByRole === 'Admin' && displayAmount !== "");
 
-                    rowHtml += `<td class="px-3 py-3 border-l border-green-200 align-top ${isQuit ? '' : (idx === 2 ? 'bg-green-50' : '')}">
+                    rowHtml += `<td class="px-3 py-3 border-l border-green-200 align-top ${(isQuit || isTempBreak || student.isDuplicate5) ? '' : (idx === 2 ? 'bg-green-50' : '')}">
                         <div class="flex flex-col gap-1.5">
                             <div class="flex flex-col items-end">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Tiền:</span>
-                                    <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                                    <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                 </div>
                                 <div id="admin-fee-badge-tuition-${index}-${m}" class="${isAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                             </div>
                             <div class="flex items-center justify-end gap-1.5">
                                 <span class="text-xs text-gray-600">Ngày:</span>
-                                <input type="date" value="${t.date || ''}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
+                                <input type="date" value="${t.date || ''}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
                             </div>
                             <div class="flex justify-end mt-0.5">
                                 <select onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -2285,18 +2688,18 @@
                         const displayEfAmount = (hasEfRecord && ef.amount && (ef.enteredByRole || isEfPaid || ef.date)) ? formatNumberInput(ef.amount) : "";
                         const isEfAdminEntered = (ef.enteredByRole === 'Admin' && displayEfAmount !== "");
 
-                        rowHtml += `<td class="px-3 py-3 border-l border-purple-200 align-top ${isQuit ? '' : 'bg-purple-50'}">
+                        rowHtml += `<td class="px-3 py-3 border-l border-purple-200 align-top ${(isQuit || isTempBreak || student.isDuplicate5) ? '' : 'bg-purple-50'}">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex flex-col items-end">
                                     <div class="flex items-center justify-end gap-1.5">
                                         <span class="text-xs text-gray-600">Tiền:</span>
-                                        <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayEfAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : ''}">
+                                        <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayEfAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                     </div>
                                     <div id="admin-fee-badge-examFee-${index}-${m}" class="${isEfAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                                 </div>
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Ngày:</span>
-                                    <input type="date" value="${ef.date || ''}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : ''}">
+                                    <input type="date" value="${ef.date || ''}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                 </div>
                                 <div class="flex justify-end mt-0.5">
                                     <select onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isEfPaid ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -2340,7 +2743,11 @@
                 if (!checkStudentMatchesFeeFilter(student, adminMonth, filterAdminFeeStatus)) continue;
 
                 filteredAdminIndices.push(index);
-                const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
+                const latestStatus = getLatestStatus(student);
+                const isQuit = latestStatus === 'Nghỉ luôn';
+                const isTempBreak = latestStatus === 'Tạm nghỉ';
+                const rowBgClass = student.isDuplicate5 ? 'duplicate-orange-row' : (isQuit ? 'bg-red-100' : (isTempBreak ? 'bg-yellow-50' : 'bg-white'));
+
                 let daysAttended = 0;
                 if (student.dailyData) {
                     for (const [dateStr, data] of Object.entries(student.dailyData)) {
@@ -2365,17 +2772,18 @@
                 }
 
                 rows.push(`
-                    <tr class="fast-row ${isQuit ? 'bg-red-100' : 'bg-white'}">
+                    <tr class="fast-row ${rowBgClass}">
                         <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
                         <td class="sticky-col-2 px-3 py-3 border-l border-b border-gray-200 align-top">${renderStudentProfileBox(student, index, false)}</td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top">${renderStudentContactBox(student)}</td>
-                        <td class="px-4 py-3 border-l border-gray-200 text-center ${isQuit ? '' : 'bg-gray-50'} align-top">
+                        <td class="px-4 py-3 border-l border-gray-200 text-center ${(isQuit || isTempBreak || student.isDuplicate5) ? '' : 'bg-gray-50'} align-top">
                             <div class="text-sm">Đi học: <span class="font-bold text-blue-600 text-base">${daysAttended}</span> buổi</div>
                             <div class="mt-2 text-sm border-t pt-2">${feeStatusHTML}</div>
                         </td>
-                        <td class="px-4 py-3 border-l border-gray-200 align-top ${unpaidMonths.length > 0 && !isQuit ? 'bg-red-50' : ''}">${unpaidHTML}</td>
+                        <td class="px-4 py-3 border-l border-gray-200 align-top ${unpaidMonths.length > 0 && !isQuit && !isTempBreak && !student.isDuplicate5 ? 'bg-red-50' : ''}">${unpaidHTML}</td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top">
-                            <div class="text-xs text-gray-500 mb-2">Thêm bởi: <span class="font-bold text-gray-900">${student.createdBy || 'Hệ thống'}</span></div>
+                            <div class="text-xs text-gray-500 mb-1">Thêm bởi: <span class="font-bold text-gray-900">${student.createdBy || 'Hệ thống'}</span></div>
+                            <div class="text-xs text-indigo-700 font-bold mb-2">Mã HV: ${student.memberCode || 'Chưa cấp'}</div>
                             <button onclick="window.openEditStudentModal(${index})" class="text-blue-600 hover:text-blue-800 text-xs font-bold underline bg-blue-50 px-2.5 py-1 rounded border border-blue-200">✏️ Chỉnh sửa hồ sơ</button>
                         </td>
                         <td class="px-4 py-3 border-l border-gray-200 text-center align-middle">
