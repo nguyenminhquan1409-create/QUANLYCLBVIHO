@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý - CLB Vĩ Hồ</title>
+    <!-- FONT CHUẨN TIẾNG VIỆT BE VIETNAM PRO TỪ GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
     <!-- TAILWIND BẢN TĨNH SIÊU NHẸ -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <!-- THƯ VIỆN SHEETJS ĐỂ ĐỌC/XUẤT EXCEL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- THƯ VIỆN HTML2CANVAS ĐỂ CHỤP PHIẾU BÁO THÀNH HÌNH ẢNH DÁN QUA ZALO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        body, input, select, textarea, button, table {
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
         table { border-collapse: separate; border-spacing: 0; }
         .fast-row { contain: layout style; }
         
@@ -75,6 +84,84 @@
         tbody tr.duplicate-orange-row:hover .sticky-col-2 {
             background-color: #fdba74 !important;
         }
+
+        /* Định dạng chuẩn cho Phiếu Thông Báo Học Phí không bao giờ bị lỗi font, méo ảnh hay lệch chữ */
+        #printableTuitionSlip, #printableTuitionSlip * {
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif !important;
+            letter-spacing: normal !important;
+            box-sizing: border-box;
+        }
+        #printableTuitionSlip {
+            width: 680px;
+            min-width: 680px;
+            max-width: 680px;
+            background-color: #ffffff;
+        }
+        .slip-img-preserve {
+            width: auto !important;
+            height: auto !important;
+            display: block;
+            margin: 0 auto;
+        }
+        /* Ô màu đỏ hiển thị tháng thông báo học phí: căn giữa tuyệt đối cả ngang lẫn dọc */
+        .month-pill-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #dc2626;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            height: 36px;
+            padding: 0 18px;
+            border-radius: 8px;
+            margin: 4px 8px 4px 0;
+            white-space: nowrap;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .month-pill-text {
+            display: inline-block;
+            line-height: 1;
+        }
+        /* Khung nền đỏ chứa Nội dung chuyển khoản: căn giữa, không bao giờ che chữ phía trên */
+        .transfer-syntax-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fef2f2;
+            border: 1.5px solid #f87171;
+            border-radius: 10px;
+            min-height: 44px;
+            padding: 10px 12px;
+            width: 100%;
+            text-align: center;
+        }
+        .transfer-syntax-text {
+            display: inline-block;
+            color: #dc2626;
+            font-weight: 800;
+            font-size: 13.5px;
+            line-height: 1.35;
+            word-break: break-word;
+            text-align: center;
+        }
+
+        /* Cấu hình khi bấm In Phiếu Báo Học Phí */
+        @media print {
+            body * { visibility: hidden !important; }
+            #printableTuitionSlip, #printableTuitionSlip * { visibility: visible !important; }
+            #printableTuitionSlip {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: 2px solid #dc2626 !important;
+                margin: 0 !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen w-screen overflow-hidden flex flex-col relative m-0 p-0">
@@ -83,6 +170,8 @@
     <input type="file" id="logoUploadInput" accept="image/*" class="hidden" onchange="window.handleLogoChange(event)">
     <!-- INPUT ẨN ĐỂ HLV CHỤP/TẢI ẢNH VÕ SINH TRỰC TIẾP TRÊN ĐIỆN THOẠI -->
     <input type="file" id="quickPhotoInput" accept="image/*" class="hidden" onchange="window.handleQuickPhotoSelected(event)">
+    <!-- INPUT ẨN ĐỂ UPLOAD MÃ QR NGÂN HÀNG -->
+    <input type="file" id="qrUploadInput" accept="image/*" class="hidden" onchange="window.handleBankQRSelected(event)">
 
     <!-- ================= GIAO DIỆN ĐĂNG NHẬP (OVERLAY) ================= -->
     <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-red-700 via-red-600 to-gray-900 z-50 flex items-center justify-center p-4">
@@ -140,6 +229,10 @@
                 <div class="font-extrabold text-xl sm:text-2xl text-red-600 tracking-wide">TAEKWONDO VĨ HỒ</div>
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
+                <!-- TRẠNG THÁI LƯU DỮ LIỆU TỰ ĐỘNG TRÊN ĐIỆN THOẠI / MÁY TÍNH -->
+                <span id="cloudSaveBadge" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-300">
+                    ☁️ Đã lưu
+                </span>
                 <!-- NÚT DỮ LIỆU TỔNG CHỈ HIỆN CHO ADMIN VÀ KẾ TOÁN -->
                 <button id="btnMasterDataHeader" onclick="window.exportMasterDataExcel()" class="hidden bg-purple-700 hover:bg-purple-800 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-sm transition items-center gap-1" title="Tải 1 file Excel gồm các Sheet dữ liệu tổng hợp (Chỉ Admin & Kế Toán)">
                     📦 DỮ LIỆU TỔNG
@@ -332,6 +425,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 items-center w-full xl:w-auto justify-end">
+                    <button onclick="window.openPaymentSettingsModal()" class="bg-pink-600 text-white px-3 py-1.5 rounded-md text-xs font-extrabold hover:bg-pink-700 shadow-sm" title="Cài đặt Mã QR Ngân Hàng & Tên, SĐT HLV Trưởng trên phiếu báo học phí">⚙️ Cài đặt QR & HLV Trưởng</button>
                     <button onclick="window.exportMasterDataExcel()" class="bg-purple-700 text-white px-3 py-1.5 rounded-md text-xs font-extrabold hover:bg-purple-800 shadow-sm" title="Tải 1 file Excel gồm đủ các Sheet dữ liệu tổng">📦 DỮ LIỆU TỔNG</button>
                     <button onclick="window.openExcelModal('admin')" class="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel Admin</button>
                     <button onclick="window.exportAdminExcel()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-yellow-600 shadow-sm" title="Xuất báo cáo tổng hợp Admin theo đúng danh sách đang lọc">📤 Xuất Excel Admin (Theo Lọc)</button>
@@ -347,7 +441,9 @@
                             <th class="sticky-col-2 bg-gray-800 px-3 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Hồ sơ Võ sinh</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Chuyên môn & Liên hệ</th>
                             <th class="bg-gray-800 px-4 py-3 text-center text-xs font-bold uppercase border-l border-gray-600 text-yellow-300">Tổng kết tháng</th>
-                            <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600 text-red-300" style="min-width: 250px;">Học phí (Tháng chưa đóng)</th>
+                            <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600 text-red-300" style="min-width: 240px;">Học phí (Tháng chưa đóng)</th>
+                            <!-- CỘT THÔNG BÁO HỌC PHÍ -->
+                            <th class="bg-gray-800 px-4 py-3 text-center text-xs font-bold uppercase border-l border-gray-600 text-green-300 whitespace-nowrap">Thông báo học phí</th>
                             <th class="bg-gray-800 px-4 py-3 text-left text-xs font-bold uppercase border-l border-gray-600">Quản lý (Hệ thống)</th>
                             <th class="bg-gray-800 px-4 py-3 text-center text-xs font-bold uppercase border-l border-gray-600 text-red-400 w-20">Xóa</th>
                         </tr>
@@ -357,7 +453,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB MỚI: MÃ HỘI VIÊN (CHỈ ADMIN) ================= -->
+        <!-- ================= TAB MÃ HỘI VIÊN (CHỈ ADMIN) ================= -->
         <div id="membercode" class="tab-content hidden w-full h-full flex flex-col min-h-0">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 mb-3 flex-shrink-0 bg-white p-2.5 rounded-lg shadow-sm border">
                 <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -469,6 +565,227 @@
         </div>
 
     </main>
+
+    <!-- ================= MODAL: PHIẾU THÔNG BÁO HỌC PHÍ ĐÃ CÂN ĐỐI HOÀN HẢO ================= -->
+    <div id="tuitionNoticeModal" onclick="if(event.target === this) window.toggleModal('tuitionNoticeModal', 'close')" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="relative mx-auto border w-full max-w-3xl shadow-2xl rounded-2xl bg-white overflow-hidden my-auto max-h-screen flex flex-col">
+            <!-- Thanh tiêu đề điều khiển -->
+            <div class="bg-gray-900 px-5 py-3 flex justify-between items-center text-white flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🧾</span>
+                    <h3 class="text-sm sm:text-base font-extrabold uppercase text-yellow-400">Phiếu Thông Báo Học Phí</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="window.openPaymentSettingsModal()" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-1.5 rounded border border-gray-500">⚙️ Cài đặt QR / HLV</button>
+                    <button type="button" onclick="window.toggleModal('tuitionNoticeModal', 'close')" class="text-gray-300 hover:text-white text-2xl font-bold leading-none ml-2">&times;</button>
+                </div>
+            </div>
+
+            <!-- Bộ chọn tháng thông báo học phí -->
+            <div class="p-3.5 bg-blue-50 border-b border-blue-200 flex-shrink-0 space-y-2.5">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <label class="text-xs font-extrabold text-blue-900 uppercase">1. Tích chọn tháng thông báo học phí:</label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="window.quickSelectNoticeMonths('current')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm">Chỉ tháng hiện tại</button>
+                        <button type="button" onclick="window.quickSelectNoticeMonths('debt')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm">Các tháng đang nợ</button>
+                        <button type="button" onclick="window.quickSelectNoticeMonths('all')" class="bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm">Chọn tất cả</button>
+                    </div>
+                </div>
+
+                <!-- Danh sách Checkbox các tháng -->
+                <div id="noticeMonthsCheckboxContainer" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto p-2 bg-white rounded-lg border border-blue-200"></div>
+
+                <!-- Tùy chỉnh đơn giá mỗi tháng ngay trong phiếu -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-700">Mức học phí / 1 tháng:</span>
+                        <input type="text" id="noticeFeePerMonthInput" inputmode="numeric" oninput="window.formatCurrencyLive(this); window.updateTuitionNoticePreview();" class="w-32 border border-blue-400 rounded px-2.5 py-1 text-xs font-extrabold text-right text-red-600 bg-white outline-none">
+                        <span class="text-xs text-gray-600 font-bold">VNĐ</span>
+                    </div>
+                    <div class="text-xs font-extrabold text-red-700">
+                        Tổng cộng: <span id="noticeQuickTotalText" class="text-sm">0đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VÙNG HIỂN THỊ & CHỤP HÌNH PHIẾU BÁO HỌC PHÍ -->
+            <div class="p-4 sm:p-6 overflow-auto flex-1 bg-gray-200 flex justify-center items-start">
+                <div id="printableTuitionSlip" class="bg-white border-4 border-red-600 rounded-2xl p-7 shadow-xl">
+                    
+                    <!-- PHẦN 1: HEADER CLB & LOGO (1 HÀNG NGANG KHÔNG XUỐNG DÒNG) -->
+                    <div class="flex items-center gap-5 border-b-2 border-red-600 pb-5 mb-5">
+                        <div style="width: 88px; height: 88px;" class="flex items-center justify-center bg-white rounded-xl p-1 flex-shrink-0">
+                            <img id="slipClubLogo" src="" alt="Logo CLB" class="slip-img-preserve" style="max-width: 84px; max-height: 84px;">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-2xl font-extrabold text-red-600 uppercase whitespace-nowrap leading-tight">CLB TAEKWONDO VĨ HỒ</div>
+                            <div class="text-base font-extrabold text-gray-900 uppercase mt-1 whitespace-nowrap">PHIẾU THÔNG BÁO HỌC PHÍ</div>
+                            <div id="slipCreatedDate" class="text-xs font-semibold text-gray-500 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 2: THÔNG TIN VÕ SINH & PHỤ HUYNH -->
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-300 mb-5">
+                        <div class="text-xs font-extrabold text-gray-500 uppercase mb-3 border-b border-gray-200 pb-1.5">
+                            I. Thông tin Hồ sơ Võ sinh & Phụ huynh
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center border-b border-dashed border-gray-300 pb-2">
+                                <span class="text-gray-600 font-semibold">Họ và tên võ sinh:</span>
+                                <span id="slipStudentName" class="text-base font-extrabold text-gray-900 uppercase"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 border-b border-dashed border-gray-300 pb-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold">Giới tính:</span>
+                                    <b id="slipStudentGender" class="text-gray-900"></b>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold">Ngày sinh:</span>
+                                    <b id="slipStudentDOB" class="text-gray-900"></b>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 border-b border-dashed border-gray-300 pb-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold">Cấp đai hiện tại:</span>
+                                    <b id="slipStudentBelt" class="text-blue-700 font-extrabold"></b>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold">Câu lạc bộ:</span>
+                                    <b id="slipStudentClub" class="text-gray-900"></b>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 pt-0.5">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold" id="slipParentRoleLabel">Họ tên Ba/Mẹ:</span>
+                                    <b id="slipParentName" class="text-gray-900"></b>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-semibold" id="slipParentPhoneLabel">SĐT Ba/Mẹ:</span>
+                                    <b id="slipParentPhone" class="text-red-600 font-extrabold"></b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 3: THÁNG THÔNG BÁO HỌC PHÍ & TỔNG TIỀN (CHỮ NẰM CHÍNH GIỮA Ô MÀU ĐỎ) -->
+                    <div class="bg-red-50 rounded-xl p-5 border-2 border-red-300 mb-5">
+                        <div class="text-xs font-extrabold text-red-800 uppercase mb-2.5">
+                            II. Chi tiết Tháng Thông Báo Học Phí:
+                        </div>
+                        <div id="slipSelectedMonthsBadges" class="py-1 mb-3 flex flex-wrap items-center"></div>
+                        <div class="border-t-2 border-red-200 pt-3 flex justify-between items-center">
+                            <span class="text-sm font-extrabold text-gray-800 uppercase">Tổng số tiền học phí cần đóng:</span>
+                            <span id="slipTotalMoney" class="text-xl font-extrabold text-red-600"></span>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 4: MÃ QR CHUYỂN KHOẢN LỚN CÂN ĐỐI & THÔNG TIN TÀI KHOẢN NGÂN HÀNG KHÔNG BỊ LỆCH -->
+                    <div class="grid grid-cols-12 gap-5 items-stretch bg-gray-50 p-4 rounded-xl border border-gray-300">
+                        <!-- Khung QR Ngân hàng (5 cột) - Mã QR to lấp đầy cân đối với khung -->
+                        <div class="col-span-5 flex flex-col items-center justify-center bg-white p-2.5 rounded-xl border-2 border-red-500 shadow-sm">
+                            <div class="text-xs font-extrabold text-red-700 mb-1.5 uppercase text-center whitespace-nowrap">MÃ QR CHUYỂN KHOẢN</div>
+                            <div style="width: 236px; height: 236px;" class="flex items-center justify-center bg-white">
+                                <img id="slipBankQRImg" src="" alt="Mã QR Ngân hàng" class="slip-img-preserve" style="max-width: 232px; max-height: 232px;">
+                            </div>
+                        </div>
+
+                        <!-- Khung Thông tin ngân hàng & HLV Trưởng (7 cột) - Bố cục tĩnh chống đè chữ & lệch chữ -->
+                        <div class="col-span-7 flex flex-col justify-between space-y-3 text-sm">
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                <div class="text-xs font-extrabold text-gray-800 uppercase pb-2 mb-2.5 border-b border-gray-200">
+                                    🏦 Thông tin tài khoản ngân hàng:
+                                </div>
+                                <div id="slipBankInfoText" class="text-gray-900 whitespace-pre-line leading-relaxed font-semibold text-sm mb-3"></div>
+                                
+                                <div class="pt-3 border-t border-gray-200">
+                                    <div class="text-xs font-extrabold text-gray-600 uppercase mb-2" style="line-height: 1.4;">
+                                        Nội dung chuyển khoản:
+                                    </div>
+                                    <div class="transfer-syntax-box">
+                                        <span id="slipTransferSyntax" class="transfer-syntax-text"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-yellow-50 p-3.5 rounded-xl border border-yellow-400 space-y-1.5">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-700 font-bold">🥋 HLV Trưởng:</span>
+                                    <b id="slipHeadCoachName" class="text-gray-900 font-extrabold uppercase"></b>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-700 font-bold">📞 SĐT HLV Trưởng:</span>
+                                    <b id="slipHeadCoachPhone" class="text-base font-extrabold text-red-700"></b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chú thích chân phiếu (Đã xóa "Xin chân thành cảm ơn!" và căn giữa) -->
+                    <div class="w-full text-center text-xs font-medium text-gray-600 italic mt-4 pt-2.5 border-t border-gray-200">
+                        Quý Phụ huynh vui lòng chuyển khoản theo đúng nội dung hoặc quét mã QR phía trên.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chân Modal: Sao chép Hình Ảnh gửi Zalo & Tải ảnh -->
+            <div class="bg-gray-50 px-5 py-3 border-t flex flex-wrap justify-end gap-2.5 flex-shrink-0">
+                <button type="button" id="btnCopySlipImage" onclick="window.copyTuitionSlipAsImage()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-extrabold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-1.5">
+                    📸 Sao chép Ảnh Phiếu gửi Zalo (Ctrl+V)
+                </button>
+                <button type="button" onclick="window.downloadTuitionSlipImage()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-lg shadow transition flex items-center gap-1">
+                    📥 Tải ảnh về máy
+                </button>
+                <button type="button" onclick="window.toggleModal('tuitionNoticeModal', 'close')" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-lg">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: CÀI ĐẶT MÃ QR NGÂN HÀNG & TÊN / SĐT HLV TRƯỞNG ================= -->
+    <div id="paymentSettingsModal" onclick="if(event.target === this) window.toggleModal('paymentSettingsModal', 'close')" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-2xl rounded-2xl bg-white">
+            <div class="flex justify-between items-center mb-4 border-b pb-2.5">
+                <h3 class="text-base font-extrabold text-pink-700 uppercase">⚙️ Cài đặt QR & HLV Trưởng</h3>
+                <button type="button" onclick="window.toggleModal('paymentSettingsModal', 'close')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-3.5 text-sm">
+                <div class="flex items-center gap-3 bg-pink-50 p-3 rounded-xl border border-pink-200">
+                    <div class="w-20 h-20 bg-white border rounded-lg p-1 flex items-center justify-center flex-shrink-0">
+                        <img id="settingsQRPreview" src="" alt="QR Preview" class="slip-img-preserve" style="max-width: 72px; max-height: 72px;">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-pink-900 mb-1">📷 Ảnh Mã QR Ngân Hàng</label>
+                        <button type="button" onclick="document.getElementById('qrUploadInput').click()" class="bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow-sm">
+                            Tải ảnh QR lên
+                        </button>
+                        <p class="text-xs text-gray-500 mt-1">Tự động căn chuẩn tỷ lệ vuông, không bị méo.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Thông tin tài khoản ngân hàng (Ngân hàng, Số TK, Chủ TK):</label>
+                    <textarea id="settingsBankInfoInput" rows="3" placeholder="VD: Ngân hàng Vietcombank&#10;STK: 0123456789&#10;Chủ TK: NGUYỄN VĂN A" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-medium outline-none focus:border-pink-600"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Họ tên HLV Trưởng:</label>
+                        <input type="text" id="settingsCoachNameInput" placeholder="VD: VĨ HỒ" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold text-gray-900 uppercase outline-none focus:border-pink-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">SĐT HLV Trưởng:</label>
+                        <input type="tel" id="settingsCoachPhoneInput" placeholder="VD: 0901234567" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold text-red-600 outline-none focus:border-pink-600">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="window.toggleModal('paymentSettingsModal', 'close')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-xs font-bold">Hủy</button>
+                    <button type="button" onclick="window.savePaymentSettings()" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-bold shadow">💾 Lưu cài đặt</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= MODAL: PHÓNG TO ẢNH KÈM THÔNG TIN HỒ SƠ VÕ SINH ================= -->
     <div id="photoPreviewModal" onclick="if(event.target === this) window.toggleModal('photoPreviewModal', 'close')" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
@@ -726,25 +1043,27 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // LOGO VECTOR CÁO VĨ HỒ TAEKWONDO NHÚNG TRỰC TIẾP
+        // LOGO VECTOR CÁO VĨ HỒ TAEKWONDO NHÚNG TRỰC TIẾP (KHUNG VUÔNG 350x350 ĐỂ KHÔNG BAO GIỜ MÉO)
         const embeddedFoxLogo = "data:image/svg+xml;utf8," + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 350">
             <defs>
                 <linearGradient id="foxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#ff6b00"/>
                     <stop offset="100%" stop-color="#d93800"/>
                 </linearGradient>
             </defs>
-            <polygon points="150,12 275,65 255,250 150,335 45,250 25,65" fill="#0f0f0f" stroke="#a3a3a3" stroke-width="8"/>
-            <polygon points="150,26 260,73 242,240 150,315 58,240 40,73" fill="#0a0a0a" stroke="url(#foxGrad)" stroke-width="6"/>
-            <path d="M115,95 L135,20 L165,75 L195,15 L185,90 L245,120 L175,145 L145,125 L125,165 L95,130 Z" fill="url(#foxGrad)"/>
-            <polygon points="168,95 190,102 173,107" fill="#ffffff"/>
-            <path d="M135,125 L180,122 L225,125 L165,152 L145,175 L125,145 Z" fill="#ffffff"/>
-            <path d="M65,245 C85,310 175,325 235,285 C205,270 175,260 135,265 C100,270 80,255 65,245 Z" fill="url(#foxGrad)"/>
-            <path d="M180,272 C200,275 218,280 232,285 C210,295 188,295 170,285 Z" fill="#ffffff"/>
-            <rect x="20" y="168" width="260" height="82" rx="10" fill="#0a0a0a" stroke="#a3a3a3" stroke-width="4"/>
-            <text x="150" y="213" font-family="Arial Black, Impact, sans-serif" font-size="44" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">VĨ HỒ</text>
-            <text x="150" y="240" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">TAEKWONDO</text>
+            <g transform="translate(25, 0)">
+                <polygon points="150,12 275,65 255,250 150,335 45,250 25,65" fill="#0f0f0f" stroke="#a3a3a3" stroke-width="8"/>
+                <polygon points="150,26 260,73 242,240 150,315 58,240 40,73" fill="#0a0a0a" stroke="url(#foxGrad)" stroke-width="6"/>
+                <path d="M115,95 L135,20 L165,75 L195,15 L185,90 L245,120 L175,145 L145,125 L125,165 L95,130 Z" fill="url(#foxGrad)"/>
+                <polygon points="168,95 190,102 173,107" fill="#ffffff"/>
+                <path d="M135,125 L180,122 L225,125 L165,152 L145,175 L125,145 Z" fill="#ffffff"/>
+                <path d="M65,245 C85,310 175,325 235,285 C205,270 175,260 135,265 C100,270 80,255 65,245 Z" fill="url(#foxGrad)"/>
+                <path d="M180,272 C200,275 218,280 232,285 C210,295 188,295 170,285 Z" fill="#ffffff"/>
+                <rect x="20" y="168" width="260" height="82" rx="10" fill="#0a0a0a" stroke="#a3a3a3" stroke-width="4"/>
+                <text x="150" y="213" font-family="Arial, sans-serif" font-size="42" font-weight="900" fill="#ffffff" text-anchor="middle">VĨ HỒ</text>
+                <text x="150" y="240" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle">TAEKWONDO</text>
+            </g>
         </svg>`);
 
         // ẢNH ĐẠI DIỆN MẶC ĐỊNH CHO VÕ SINH CHƯA CÓ ẢNH
@@ -754,6 +1073,20 @@
             <circle cx="60" cy="42" r="22" fill="#d1d5db"/>
             <path d="M20,108 C20,82 40,70 60,70 C80,70 100,82 100,108 Z" fill="#9ca3af"/>
             <path d="M44,72 L60,96 L76,72" fill="none" stroke="#ef4444" stroke-width="5"/>
+        </svg>`);
+
+        // ẢNH MÃ QR MẶC ĐỊNH KHI CHƯA TẢI QR NGÂN HÀNG LÊN
+        const defaultQRPlaceholderSVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <rect width="200" height="200" fill="#ffffff" stroke="#e5e7eb" stroke-width="4"/>
+            <rect x="16" y="16" width="52" height="52" fill="none" stroke="#111827" stroke-width="8"/>
+            <rect x="30" y="30" width="24" height="24" fill="#111827"/>
+            <rect x="132" y="16" width="52" height="52" fill="none" stroke="#111827" stroke-width="8"/>
+            <rect x="146" y="30" width="24" height="24" fill="#111827"/>
+            <rect x="16" y="132" width="52" height="52" fill="none" stroke="#111827" stroke-width="8"/>
+            <rect x="30" y="146" width="24" height="24" fill="#111827"/>
+            <text x="100" y="102" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#dc2626" text-anchor="middle">Bấm Cài đặt QR</text>
+            <text x="100" y="120" font-family="Arial, sans-serif" font-size="11" fill="#4b5563" text-anchor="middle">để tải mã QR NH</text>
         </svg>`);
 
         const firebaseConfig = {
@@ -790,14 +1123,74 @@
         let isDataLoaded = false;
         let searchDebounceTimer = null;
         let skipNextFirebaseRender = false;
+        let mobileFeeSaveTimers = {};
 
-        // --- XỬ LÝ LOGO CLB (CHỈ ADMIN MỚI ĐỔI ĐƯỢC) ---
+        // Cấu hình thông tin thanh toán & Họ tên + SĐT HLV Trưởng trên phiếu báo học phí
+        let paymentConfig = JSON.parse(localStorage.getItem('clubPaymentConfig') || 'null') || {
+            qrImage: "",
+            bankInfo: "Ngân hàng: (Bấm Cài đặt QR để nhập)\nSố TK: ...\nChủ TK: CLB TAEKWONDO VĨ HỒ",
+            coachName: "VĨ HỒ",
+            coachPhone: "090..."
+        };
+        let lastUsedNoticeFee = localStorage.getItem('lastUsedNoticeFee') || "500000";
+        let currentNoticeStudentIdx = null;
+        let currentNoticeCandidateMonths = [];
+        let tempSettingsQRBase64 = "";
+
+        // --- HÀM VẼ LẠI ẢNH VÀO KHUNG VUÔNG CÓ ĐỆM TRẮNG ĐỂ HTML2CANVAS KHÔNG BAO GIỜ LÀM MÉO ẢNH ---
+        function normalizeImageToSquareContain(dataUrl, boxSize, callback) {
+            if (!dataUrl) return callback("");
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = boxSize;
+                canvas.height = boxSize;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, boxSize, boxSize);
+
+                const scale = Math.min(boxSize / img.width, boxSize / img.height);
+                const drawW = img.width * scale;
+                const drawH = img.height * scale;
+                const offsetX = (boxSize - drawW) / 2;
+                const offsetY = (boxSize - drawH) / 2;
+
+                ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                callback(canvas.toDataURL('image/png', 0.95));
+            };
+            img.onerror = () => callback(dataUrl);
+            img.src = dataUrl;
+        }
+
+        // --- HIỂN THỊ TRẠNG THÁI LƯU DỮ LIỆU TRÊN ĐIỆN THOẠI / MÁY TÍNH ---
+        function showCloudSavingStatus(state) {
+            const badge = document.getElementById('cloudSaveBadge');
+            if (!badge) return;
+            badge.classList.remove('hidden');
+            if (state === 'saving') {
+                badge.className = "inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-300";
+                badge.innerText = "⏳ Đang lưu...";
+            } else if (state === 'saved') {
+                badge.className = "inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-300";
+                badge.innerText = "☁️ Đã lưu tự động";
+            } else if (state === 'error') {
+                badge.className = "inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-300";
+                badge.innerText = "⚠️ Lỗi kết nối mạng!";
+            }
+        }
+
+        // --- XỬ LÝ LOGO CLB (CHỈ ADMIN MỚI ĐỔI ĐƯỢC, TỰ ĐỘNG CHỐNG MÉO) ---
         function applyLogoToDOM(logoSrc) {
             const srcToUse = logoSrc || embeddedFoxLogo;
             const hLogo = document.getElementById('headerLogoImg');
             const lLogo = document.getElementById('loginLogoImg');
+            const sLogo = document.getElementById('slipClubLogo');
             if (hLogo) hLogo.src = srcToUse;
             if (lLogo) lLogo.src = srcToUse;
+            if (sLogo) {
+                normalizeImageToSquareContain(srcToUse, 240, (squareLogo) => {
+                    sLogo.src = squareLogo || srcToUse;
+                });
+            }
         }
         applyLogoToDOM(localStorage.getItem('clubLogoBase64'));
 
@@ -816,22 +1209,12 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const maxH = 180;
-                    const scale = maxH / img.height;
-                    canvas.height = maxH;
-                    canvas.width = img.width * scale;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const base64Data = canvas.toDataURL('image/png', 0.9);
+                normalizeImageToSquareContain(e.target.result, 240, (base64Data) => {
                     localStorage.setItem('clubLogoBase64', base64Data);
                     set(ref(db, 'clubLogo'), base64Data);
                     applyLogoToDOM(base64Data);
-                    alert("Đã lưu Logo CLB lên hệ thống Web thành công!");
-                };
-                img.src = e.target.result;
+                    alert("Đã lưu Logo CLB chuẩn tỷ lệ lên hệ thống Web thành công!");
+                });
             };
             reader.readAsDataURL(file);
         };
@@ -842,6 +1225,249 @@
                 applyLogoToDOM(snapshot.val());
             }
         });
+
+        // --- ĐỒNG BỘ CÀI ĐẶT QR NGÂN HÀNG & HỌ TÊN + SĐT HLV TRƯỞNG ---
+        onValue(ref(db, 'paymentConfig'), (snapshot) => {
+            if (snapshot.exists() && snapshot.val()) {
+                paymentConfig = { ...paymentConfig, ...snapshot.val() };
+                localStorage.setItem('clubPaymentConfig', JSON.stringify(paymentConfig));
+            }
+        });
+
+        window.openPaymentSettingsModal = function() {
+            if (currentRole !== 'Admin') return alert("Chỉ Admin mới có quyền cài đặt QR & HLV Trưởng!");
+            tempSettingsQRBase64 = paymentConfig.qrImage || "";
+            document.getElementById('settingsQRPreview').src = tempSettingsQRBase64 || defaultQRPlaceholderSVG;
+            document.getElementById('settingsBankInfoInput').value = paymentConfig.bankInfo || "";
+            document.getElementById('settingsCoachNameInput').value = paymentConfig.coachName || "VĨ HỒ";
+            document.getElementById('settingsCoachPhoneInput').value = paymentConfig.coachPhone || "";
+            window.toggleModal('paymentSettingsModal', 'open');
+        };
+
+        window.handleBankQRSelected = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                normalizeImageToSquareContain(e.target.result, 480, (squareQR) => {
+                    tempSettingsQRBase64 = squareQR;
+                    document.getElementById('settingsQRPreview').src = tempSettingsQRBase64;
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.savePaymentSettings = function() {
+            paymentConfig = {
+                qrImage: tempSettingsQRBase64 || "",
+                bankInfo: document.getElementById('settingsBankInfoInput').value.trim(),
+                coachName: document.getElementById('settingsCoachNameInput').value.trim().toUpperCase() || "VĨ HỒ",
+                coachPhone: document.getElementById('settingsCoachPhoneInput').value.trim()
+            };
+            localStorage.setItem('clubPaymentConfig', JSON.stringify(paymentConfig));
+            set(ref(db, 'paymentConfig'), paymentConfig);
+            window.toggleModal('paymentSettingsModal', 'close');
+            if (!document.getElementById('tuitionNoticeModal').classList.contains('hidden')) {
+                window.updateTuitionNoticePreview();
+            }
+            alert("Đã lưu cài đặt Mã QR Ngân hàng & Thông tin HLV Trưởng thành công!");
+        };
+
+        // --- TẠO PHIẾU THÔNG BÁO HỌC PHÍ Ở TAB ADMIN ---
+        function toCompactNoToneUpper(str) {
+            if (!str) return "";
+            return removeVietnameseTones(str).replace(/[^a-z0-9]/gi, '').toUpperCase();
+        }
+
+        window.openTuitionNoticeModal = function(studentIdx) {
+            const st = students[studentIdx];
+            if (!st) return;
+            currentNoticeStudentIdx = studentIdx;
+
+            const adminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
+            const unpaidMonths = getUnpaidMonthsList(st, adminMonth);
+
+            const monthSet = new Set([...unpaidMonths, adminMonth]);
+            currentNoticeCandidateMonths = Array.from(monthSet).sort();
+
+            const container = document.getElementById('noticeMonthsCheckboxContainer');
+            container.innerHTML = currentNoticeCandidateMonths.map(m => {
+                const [y, mm] = m.split('-');
+                const isPaid = st.tuition && st.tuition[m] && st.tuition[m].status === "Đã đóng";
+                const isCurrent = m === adminMonth;
+                const shouldCheck = !isPaid || unpaidMonths.length === 0;
+                const badgeStyle = isPaid
+                    ? 'bg-green-50 text-green-800 border-green-300'
+                    : 'bg-red-50 text-red-700 border-red-300';
+
+                return `
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer select-none ${badgeStyle}">
+                        <input type="checkbox" value="${m}" ${shouldCheck ? 'checked' : ''} onchange="window.updateTuitionNoticePreview()" class="notice-month-cb rounded text-red-600 focus:ring-0">
+                        <span>Tháng ${mm}/${y} ${isCurrent ? '(Hiện tại)' : ''} ${isPaid ? '✓' : '(Nợ)'}</span>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('noticeFeePerMonthInput').value = formatNumberInput(lastUsedNoticeFee || "500000");
+            applyLogoToDOM(localStorage.getItem('clubLogoBase64'));
+            window.updateTuitionNoticePreview();
+            window.toggleModal('tuitionNoticeModal', 'open');
+        };
+
+        window.quickSelectNoticeMonths = function(mode) {
+            if (currentNoticeStudentIdx === null) return;
+            const st = students[currentNoticeStudentIdx];
+            const adminMonth = document.getElementById('adminMonth').value;
+            const checkboxes = document.querySelectorAll('.notice-month-cb');
+
+            checkboxes.forEach(cb => {
+                const m = cb.value;
+                const isPaid = st.tuition && st.tuition[m] && st.tuition[m].status === "Đã đóng";
+                if (mode === 'current') cb.checked = (m === adminMonth);
+                else if (mode === 'debt') cb.checked = !isPaid;
+                else cb.checked = true;
+            });
+            window.updateTuitionNoticePreview();
+        };
+
+        window.updateTuitionNoticePreview = function() {
+            if (currentNoticeStudentIdx === null || !students[currentNoticeStudentIdx]) return;
+            const st = students[currentNoticeStudentIdx];
+
+            const selectedMonths = Array.from(document.querySelectorAll('.notice-month-cb:checked')).map(cb => cb.value);
+            const defaultUnitFee = parseRawNumber(document.getElementById('noticeFeePerMonthInput').value);
+            if (defaultUnitFee > 0) {
+                lastUsedNoticeFee = String(defaultUnitFee);
+                localStorage.setItem('lastUsedNoticeFee', lastUsedNoticeFee);
+            }
+
+            let totalMoney = 0;
+            selectedMonths.forEach(m => {
+                const savedAmt = (st.tuition && st.tuition[m] && parseRawNumber(st.tuition[m].amount) > 0)
+                    ? parseRawNumber(st.tuition[m].amount)
+                    : defaultUnitFee;
+                totalMoney += savedAmt;
+            });
+
+            const pRole = st.parentRole || 'Ba/Mẹ';
+            document.getElementById('slipCreatedDate').innerText = `Ngày lập phiếu: ${new Date().toLocaleDateString('vi-VN')}`;
+            document.getElementById('slipStudentName').innerText = st.name || '';
+            document.getElementById('slipStudentGender').innerText = st.gender || 'Nam';
+            document.getElementById('slipStudentDOB').innerText = formatDate(st.dob);
+            document.getElementById('slipStudentBelt').innerText = st.belt || 'Cấp 10';
+            document.getElementById('slipStudentClub').innerText = st.club || 'Chưa phân CLB';
+
+            document.getElementById('slipParentRoleLabel').innerText = `Họ tên ${pRole}:`;
+            document.getElementById('slipParentName').innerText = st.parentName || 'Chưa cập nhật';
+            document.getElementById('slipParentPhoneLabel').innerText = `SĐT ${pRole}:`;
+            document.getElementById('slipParentPhone').innerText = st.phone || 'Chưa cập nhật';
+
+            const monthsContainer = document.getElementById('slipSelectedMonthsBadges');
+            if (selectedMonths.length === 0) {
+                monthsContainer.innerHTML = `<span class="text-sm italic text-gray-500">Chưa chọn tháng nào</span>`;
+            } else {
+                monthsContainer.innerHTML = selectedMonths.map(m => {
+                    const [y, mm] = m.split('-');
+                    return `<span class="month-pill-box"><span class="month-pill-text">Tháng ${mm}/${y}</span></span>`;
+                }).join('');
+            }
+
+            const totalFormatted = formatMoney(totalMoney);
+            document.getElementById('noticeQuickTotalText').innerText = totalFormatted;
+            document.getElementById('slipTotalMoney').innerText = `${totalFormatted} (${selectedMonths.length} tháng)`;
+
+            const qrEl = document.getElementById('slipBankQRImg');
+            if (paymentConfig.qrImage) {
+                normalizeImageToSquareContain(paymentConfig.qrImage, 480, (sqQR) => {
+                    qrEl.src = sqQR || paymentConfig.qrImage;
+                });
+            } else {
+                qrEl.src = defaultQRPlaceholderSVG;
+            }
+
+            document.getElementById('slipBankInfoText').innerText = paymentConfig.bankInfo || 'Chưa cài đặt thông tin ngân hàng';
+            document.getElementById('slipHeadCoachName').innerText = paymentConfig.coachName || 'VĨ HỒ';
+            document.getElementById('slipHeadCoachPhone').innerText = paymentConfig.coachPhone || 'Chưa cập nhật';
+
+            const compactName = toCompactNoToneUpper(st.name || "VOSINH");
+            const compactClub = toCompactNoToneUpper(st.club === "Chưa phân CLB" ? "CLBVIHO" : (st.club || "CLBVIHO"));
+            const monthLabels = selectedMonths.map(m => {
+                const [y, mm] = m.split('-');
+                return `${mm}/${y}`;
+            }).join(', ');
+            document.getElementById('slipTransferSyntax').innerText = `${compactName} - ${compactClub} - HP Thang ${monthLabels || '...'}`;
+        };
+
+        // --- CHỤP PHIẾU BÁO THÀNH HÌNH ẢNH SẮC NÉT LƯU VÀO CLIPBOARD ĐỂ QUA ZALO ẤN CTRL+V ---
+        async function renderSlipToCanvas() {
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+            const slipEl = document.getElementById('printableTuitionSlip');
+            return await html2canvas(slipEl, {
+                scale: 2,
+                width: 680,
+                windowWidth: 1200,
+                backgroundColor: "#ffffff",
+                useCORS: true,
+                logging: false,
+                onclone: (clonedDoc) => {
+                    // Căn chỉnh bù trừ baseline của html2canvas để chữ nằm ngay chính giữa ô màu đỏ (Tháng thông báo & Nội dung CK)
+                    const pillTexts = clonedDoc.querySelectorAll('.month-pill-text');
+                    pillTexts.forEach(el => {
+                        el.style.position = 'relative';
+                        el.style.top = '-5px';
+                    });
+                    const syntaxTexts = clonedDoc.querySelectorAll('.transfer-syntax-text');
+                    syntaxTexts.forEach(el => {
+                        el.style.position = 'relative';
+                        el.style.top = '-4px';
+                    });
+                }
+            });
+        }
+
+        window.copyTuitionSlipAsImage = async function() {
+            const btn = document.getElementById('btnCopySlipImage');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Đang tạo hình ảnh phiếu báo...";
+
+            try {
+                const canvas = await renderSlipToCanvas();
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    alert("✅ Đã sao chép Phiếu Thông Báo Học Phí dạng HÌNH ẢNH!\n\nBây giờ bạn mở Zalo và bấm Ctrl + V (hoặc Dán) để gửi ảnh ngay.");
+                } else {
+                    const link = document.createElement('a');
+                    const st = students[currentNoticeStudentIdx];
+                    link.download = `Phieu_Hoc_Phi_${toCompactNoToneUpper(st ? st.name : 'VoSinh')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    alert("Trình duyệt của bạn không hỗ trợ dán ảnh trực tiếp, hệ thống đã tự động tải hình ảnh Phiếu Báo về máy!");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Không thể sao chép ảnh tự động trên trình duyệt này. Hệ thống sẽ tải hình ảnh phiếu về máy cho bạn!");
+                window.downloadTuitionSlipImage();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        };
+
+        window.downloadTuitionSlipImage = async function() {
+            const canvas = await renderSlipToCanvas();
+            const st = students[currentNoticeStudentIdx];
+            const link = document.createElement('a');
+            link.download = `Phieu_Hoc_Phi_${toCompactNoToneUpper(st ? st.name : 'VoSinh')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
 
         // --- HÀM CẮT VUÔNG TỰ ĐỘNG CANH GIỮA (CENTER-CROP 1:1) & NÉN ẢNH CHÂN DUNG VÕ SINH ---
         function compressImageFile(file, targetSize, quality, callback) {
@@ -1052,7 +1678,6 @@
             return getStudentFiveFieldsKey(stA) === getStudentFiveFieldsKey(stB);
         }
 
-        // Tự động rà soát và đánh dấu màu cam cho các cặp võ sinh trùng cả 5 thông tin
         function recalculateFiveFieldDuplicates() {
             const keyCountMap = {};
             for (let i = 0; i < students.length; i++) {
@@ -1194,7 +1819,6 @@
             return unpaidMonths;
         }
 
-        // --- HÀM KIỂM TRA LỌC THÔNG MINH THEO THÁNG ĐƯỢC CHỌN ---
         function checkStudentMatchesFeeFilter(student, targetMonth, filterMode) {
             if (!filterMode || filterMode === 'All') return true;
 
@@ -1353,7 +1977,7 @@
             XLSX.writeFile(wb, `Danh_Sach_Ma_Hoi_Vien_${todayStr}.xlsx`);
         };
 
-        // 3. XUẤT EXCEL TAB ADMIN (TỔNG HỢP THEO BỘ LỌC)
+        // 3. XUẤT EXCEL TAB ADMIN
         function generateAdminWorkbook(useFiltered = true) {
             const adminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
             const [yStr, mStr] = adminMonth.split('-');
@@ -1595,23 +2219,18 @@
             const wb = XLSX.utils.book_new();
             const currentYearStr = new Date().getFullYear().toString();
 
-            // Sheet 1: HLV
             const { ws: wsHLV } = generateHLVWorkbook(false);
             XLSX.utils.book_append_sheet(wb, wsHLV, "HLV");
 
-            // Sheet 2: Kế Toán (Học phí 12 tháng + 4 kỳ thi của năm hiện tại)
             const { ws: wsKeToan } = generateAccountingWorkbook(currentYearStr);
             XLSX.utils.book_append_sheet(wb, wsKeToan, "Kế Toán");
 
-            // Sheet 3: Admin
             const { ws: wsAdmin } = generateAdminWorkbook(false);
             XLSX.utils.book_append_sheet(wb, wsAdmin, "Admin");
 
-            // Sheet 4: Mã Hội Viên
             const { ws: wsMemberCode } = generateMemberCodeWorkbook(false);
             XLSX.utils.book_append_sheet(wb, wsMemberCode, "Mã Hội Viên");
 
-            // Sheet 5: Cấp quyền
             const accHeaders = ["STT", "Tên đăng nhập (SĐT)", "Mật khẩu", "Vai trò"];
             const accRows = [accHeaders];
             let accStt = 1;
@@ -1627,7 +2246,6 @@
             const wsAccounts = XLSX.utils.aoa_to_sheet(accRows);
             XLSX.utils.book_append_sheet(wb, wsAccounts, "Cấp quyền");
 
-            // Sheet 6: Võ sinh đã xóa
             const trashHeaders = [
                 "STT", "Họ và tên", "Mã Hội Viên", "Giới tính", "Ngày sinh (YYYY-MM-DD)", "Ngày nhập học (YYYY-MM-DD)",
                 "Cấp Đai", "Câu lạc bộ", "Tên Phụ huynh", "Vai trò", "SĐT Phụ huynh",
@@ -1734,7 +2352,6 @@
             };
         }
 
-        // HỖ TRỢ CẬP NHẬT DỮ LIỆU CHUYÊN MÔN & HỌC PHÍ TỪ 1 DÒNG EXCEL VÀO ĐỐI TƯỢNG VÕ SINH
         function applyExcelRowExtraFieldsToStudent(targetStudent, row, selectedHLVDate, defaultYear) {
             const statusVal = (row["Trạng thái"] || row["Trạng thái học"] || "").toString().trim();
             const examStatusVal = (row["Thi cấp"] || row["Xét thi cấp"] || "").toString().trim();
@@ -1815,7 +2432,6 @@
             }
         }
 
-        // XỬ LÝ UPLOAD FILE EXCEL THEO ĐÚNG QUY TẮC 5 THÔNG TIN & CẬP NHẬT MÃ HỘI VIÊN
         window.handleExcelUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1854,7 +2470,6 @@
                         belt: beltVal
                     };
 
-                    // TRƯỜNG HỢP 1: Ở TAB MÃ HỘI VIÊN HOẶC TAB KẾ TOÁN -> Cập nhật Mã HV / Học phí cho võ sinh khớp 5 thông tin (hoặc khớp Họ tên), nếu chưa có thì thêm mới
                     if (currentExcelModalTab === 'membercode' || currentExcelModalTab === 'hocphi') {
                         let targetStudent = students.find(s => s && isSameFiveFields(s, candidateObj));
                         if (!targetStudent) {
@@ -1894,9 +2509,6 @@
                         return;
                     }
 
-                    // TRƯỜNG HỢP 2: Ở TAB HLV HOẶC TAB ADMIN -> Đối chiếu 5 thông tin: Họ và tên - Giới tính - Ngày sinh - CLB - Cấp đai
-                    // - Khác 1 thông tin: vẫn thêm mới vào danh sách.
-                    // - Giống nhau cả 5 thông tin: vẫn thêm vào danh sách NHƯNG tô cam màu nền cả 2 võ sinh.
                     const matchedExisting = students.filter(s => s && isSameFiveFields(s, candidateObj));
                     const isDup5 = matchedExisting.length > 0;
                     if (isDup5) {
@@ -2008,7 +2620,6 @@
                 document.getElementById(id).classList.add('hidden');
             });
 
-            // Chỉ Admin mới đổi được Logo
             const hLogo = document.getElementById('headerLogoImg');
             if (hLogo) {
                 if (currentRole === 'Admin') {
@@ -2020,7 +2631,6 @@
                 }
             }
 
-            // Nút "DỮ LIỆU TỔNG" chỉ hiện ở tài khoản Admin và Kế Toán
             const btnMasterHeader = document.getElementById('btnMasterDataHeader');
             if (btnMasterHeader) {
                 if (currentRole === 'Admin' || currentRole === 'Kế Toán') {
@@ -2087,15 +2697,17 @@
             });
         };
 
-        // ================= LƯU TRỮ FIREBASE =================
+        // ================= LƯU TRỮ FIREBASE AN TOÀN CHO CẢ ĐIỆN THOẠI & MÁY TÍNH =================
         function saveSingleStudent(index, silent = false) {
             if (students[index]) {
                 if (silent) skipNextFirebaseRender = true;
-                set(ref(db, `students/${index}`), students[index]);
+                showCloudSavingStatus('saving');
+                set(ref(db, `students/${index}`), students[index])
+                    .then(() => showCloudSavingStatus('saved'))
+                    .catch(() => showCloudSavingStatus('error'));
             }
         }
 
-        // Cập nhật Mã hội viên trực tiếp ở Tab Mã hội viên (Admin)
         window.updateMemberCode = function(index, val) {
             if (currentRole !== 'Admin') return;
             if (!students[index]) return;
@@ -2314,7 +2926,7 @@
             alert("Đã cập nhật hồ sơ thành công!");
         });
 
-        // ================= HỌC PHÍ & LỆ PHÍ THI =================
+        // ================= HỌC PHÍ & LỆ PHÍ THI (TỐI ƯU LƯU TỰ ĐỘNG NGAY KHI GÕ TRÊN ĐIỆN THOẠI) =================
         function getOffsetMonth(baseMonth, offset) {
             let [year, month] = baseMonth.split('-').map(Number);
             month += offset;
@@ -2367,13 +2979,50 @@
             });
         }
 
+        window.handleMobileFeeAmountInput = function(type, index, month, inputEl) {
+            window.formatCurrencyLive(inputEl);
+            if (!students[index]) return;
+            if (!students[index][type]) students[index][type] = {};
+            if (!students[index][type][month]) {
+                students[index][type][month] = { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
+            }
+
+            const rawNum = parseRawNumber(inputEl.value);
+            if (rawNum > 0) {
+                students[index][type][month].amount = String(rawNum);
+                students[index][type][month].enteredByRole = currentRole;
+            } else {
+                students[index][type][month].amount = "";
+                students[index][type][month].enteredByRole = "";
+            }
+
+            const badgeEl = document.getElementById(`admin-fee-badge-${type}-${index}-${month}`);
+            if (badgeEl) {
+                const showAdmin = (students[index][type][month].enteredByRole === 'Admin' && students[index][type][month].amount !== "");
+                badgeEl.classList.toggle('hidden', !showAdmin);
+            }
+
+            refreshTuitionColumnTotals();
+            showCloudSavingStatus('saving');
+
+            const timerKey = `${type}_${index}_${month}`;
+            if (mobileFeeSaveTimers[timerKey]) clearTimeout(mobileFeeSaveTimers[timerKey]);
+            mobileFeeSaveTimers[timerKey] = setTimeout(() => {
+                saveSingleStudent(index, true);
+            }, 350);
+        };
+
         window.updateFeeRecord = function(type, index, month, field, value, el) {
+            if (!students[index]) return;
             if (!students[index][type]) students[index][type] = {};
             if (!students[index][type][month]) {
                 students[index][type][month] = { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
             }
 
             if (field === 'amount') {
+                const timerKey = `${type}_${index}_${month}`;
+                if (mobileFeeSaveTimers[timerKey]) clearTimeout(mobileFeeSaveTimers[timerKey]);
+
                 const rawNum = parseRawNumber(value);
                 if (rawNum > 0) {
                     students[index][type][month].amount = String(rawNum);
@@ -2527,7 +3176,6 @@
             if (hlvBadge) hlvBadge.innerText = `${filteredHLVIndices.length} võ sinh`;
         };
 
-        // RENDER TAB MÃ HỘI VIÊN (CHỈ ADMIN)
         window.renderMemberCodeTable = function() {
             const tbody = document.getElementById('memberCodeTableBody');
             if (!tbody) return;
@@ -2562,7 +3210,7 @@
                             ${renderStudentProfileBox(student, index, true)}
                         </td>
                         <td class="px-4 py-3 align-top border-l border-gray-100">
-                            <input type="text" value="${(student.memberCode || '').replace(/"/g, '&quot;')}" onchange="window.updateMemberCode(${index}, this.value)" placeholder="Nhập mã hội viên..." class="w-48 text-sm font-extrabold text-indigo-700 uppercase border border-indigo-300 rounded-md px-3 py-1.5 focus:border-indigo-600 outline-none bg-white shadow-sm">
+                            <input type="text" value="${(student.memberCode || '').replace(/"/g, '&quot;')}" onchange="window.updateMemberCode(${index}, this.value)" onblur="window.updateMemberCode(${index}, this.value)" placeholder="Nhập mã hội viên..." class="w-48 text-sm font-extrabold text-indigo-700 uppercase border border-indigo-300 rounded-md px-3 py-1.5 focus:border-indigo-600 outline-none bg-white shadow-sm">
                             <div class="text-xs text-gray-500 mt-1">Tự động lưu khi nhập xong</div>
                         </td>
                         <td class="px-4 py-3 align-top border-l border-gray-100">
@@ -2664,13 +3312,13 @@
                             <div class="flex flex-col items-end">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Tiền:</span>
-                                    <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
+                                    <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayAmount}" oninput="window.handleMobileFeeAmountInput('tuition', ${index}, '${m}', this)" onblur="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                 </div>
                                 <div id="admin-fee-badge-tuition-${index}-${m}" class="${isAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                             </div>
                             <div class="flex items-center justify-end gap-1.5">
                                 <span class="text-xs text-gray-600">Ngày:</span>
-                                <input type="date" value="${t.date || ''}" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
+                                <input type="date" value="${t.date || ''}" oninput="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
                             </div>
                             <div class="flex justify-end mt-0.5">
                                 <select onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -2693,13 +3341,13 @@
                                 <div class="flex flex-col items-end">
                                     <div class="flex items-center justify-end gap-1.5">
                                         <span class="text-xs text-gray-600">Tiền:</span>
-                                        <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayEfAmount}" oninput="window.formatCurrencyLive(this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
+                                        <input type="text" inputmode="numeric" placeholder="Nhập tiền..." value="${displayEfAmount}" oninput="window.handleMobileFeeAmountInput('examFee', ${index}, '${m}', this)" onblur="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'amount', this.value, this)" class="w-28 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold text-gray-800 ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                     </div>
                                     <div id="admin-fee-badge-examFee-${index}-${m}" class="${isEfAdminEntered ? '' : 'hidden'} text-xs font-extrabold text-red-600 pr-1 mt-0.5 leading-none">admin</div>
                                 </div>
                                 <div class="flex items-center justify-end gap-1.5">
                                     <span class="text-xs text-gray-600">Ngày:</span>
-                                    <input type="date" value="${ef.date || ''}" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
+                                    <input type="date" value="${ef.date || ''}" oninput="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
                                 </div>
                                 <div class="flex justify-end mt-0.5">
                                     <select onchange="window.updateFeeRecord('examFee', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isEfPaid ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
@@ -2781,6 +3429,12 @@
                             <div class="mt-2 text-sm border-t pt-2">${feeStatusHTML}</div>
                         </td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top ${unpaidMonths.length > 0 && !isQuit && !isTempBreak && !student.isDuplicate5 ? 'bg-red-50' : ''}">${unpaidHTML}</td>
+                        <td class="px-4 py-3 border-l border-gray-200 text-center align-middle whitespace-nowrap">
+                            <button onclick="window.openTuitionNoticeModal(${index})" class="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-3 py-2 rounded-lg shadow transition inline-flex items-center gap-1">
+                                🧾 Tạo phiếu báo
+                            </button>
+                            ${unpaidMonths.length > 0 ? `<div class="text-xs font-bold text-red-600 mt-1">Nợ ${unpaidMonths.length} tháng</div>` : `<div class="text-xs text-green-600 font-medium mt-1">Báo tháng hiện tại</div>`}
+                        </td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top">
                             <div class="text-xs text-gray-500 mb-1">Thêm bởi: <span class="font-bold text-gray-900">${student.createdBy || 'Hệ thống'}</span></div>
                             <div class="text-xs text-indigo-700 font-bold mb-2">Mã HV: ${student.memberCode || 'Chưa cấp'}</div>
@@ -2846,7 +3500,17 @@
         });
 
         onValue(ref(db, 'students'), (snapshot) => {
-            students = snapshot.exists() ? (Array.isArray(snapshot.val()) ? snapshot.val() : Object.values(snapshot.val())) : [];
+            if (!snapshot.exists()) {
+                students = [];
+            } else {
+                const rawVal = snapshot.val();
+                if (Array.isArray(rawVal)) {
+                    students = rawVal;
+                } else {
+                    students = Object.values(rawVal);
+                    set(ref(db, 'students'), students);
+                }
+            }
             if (skipNextFirebaseRender) {
                 skipNextFirebaseRender = false;
                 return;
