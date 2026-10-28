@@ -285,13 +285,13 @@
                 
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                     <button onclick="window.openExcelModal('diemdanh')" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-green-700 shadow-sm">📥 Nhập Excel HLV</button>
-                    <button onclick="window.exportHLVExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-yellow-600 shadow-sm" title="Xuất danh sách võ sinh theo đúng bộ lọc Thi cấp / Trạng thái đang chọn">📤 Xuất Excel HLV (Theo Lọc)</button>
+                    <button onclick="window.exportHLVExcel()" class="bg-yellow-500 text-white px-3 py-2 rounded-md text-sm font-bold hover:bg-yellow-600 shadow-sm" title="Xuất danh sách võ sinh theo đúng bộ lọc Thi cấp / Trạng thái / Cấp đai đang chọn">📤 Xuất Excel HLV (Theo Lọc)</button>
                     <button onclick="window.openAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 shadow-sm">➕ Thêm võ sinh</button>
                 </div>
             </div>
 
-            <!-- THANH BỘ LỌC & TÌM KIẾM CHO HLV -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3 bg-white p-3 rounded-lg shadow-sm border w-full flex-shrink-0">
+            <!-- THANH BỘ LỌC & TÌM KIẾM CHO HLV (ĐÃ THÊM LỌC CẤP ĐAI) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-3 bg-white p-3 rounded-lg shadow-sm border w-full flex-shrink-0">
                 <div>
                     <label class="block text-xs font-bold text-red-600 mb-1">🔍 Tìm kiếm Họ và Tên:</label>
                     <input type="text" id="searchHLVName" oninput="window.debouncedRender('diemdanh')" placeholder="Nhập bất kỳ ký tự có/không dấu..." class="w-full border border-red-300 rounded-md p-1.5 text-sm outline-none focus:border-red-600 bg-red-50">
@@ -300,6 +300,12 @@
                     <label class="block text-xs font-bold text-gray-700 mb-1">Lọc Câu Lạc Bộ:</label>
                     <select id="filterClub" onchange="window.renderAttendanceTable()" class="w-full border border-gray-300 rounded-md p-1.5 text-sm outline-none focus:border-red-500 font-medium text-blue-700 bg-blue-50">
                         <option value="All">- Tất cả CLB -</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Lọc Cấp Đai:</label>
+                    <select id="filterBelt" onchange="window.renderAttendanceTable()" class="w-full border border-gray-300 rounded-md p-1.5 text-sm outline-none focus:border-red-500 font-medium text-indigo-700 bg-indigo-50">
+                        <option value="All">- Tất cả cấp đai -</option>
                     </select>
                 </div>
                 <div>
@@ -576,7 +582,7 @@
                     <h3 class="text-sm sm:text-base font-extrabold uppercase text-yellow-400">Phiếu Thông Báo Học Phí</h3>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="window.openPaymentSettingsModal()" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-1.5 rounded border border-gray-500">⚙️ Cài đặt QR / HLV</button>
+                    <button type="button" id="btnOpenPaymentSettingsInModal" onclick="window.openPaymentSettingsModal()" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-1.5 rounded border border-gray-500">⚙️ Cài đặt QR / HLV</button>
                     <button type="button" onclick="window.toggleModal('tuitionNoticeModal', 'close')" class="text-gray-300 hover:text-white text-2xl font-bold leading-none ml-2">&times;</button>
                 </div>
             </div>
@@ -1258,6 +1264,7 @@
         };
 
         window.savePaymentSettings = function() {
+            if (currentRole !== 'Admin') return alert("Chỉ Admin mới có quyền lưu cài đặt QR & HLV Trưởng!");
             paymentConfig = {
                 qrImage: tempSettingsQRBase64 || "",
                 bankInfo: document.getElementById('settingsBankInfoInput').value.trim(),
@@ -1273,37 +1280,48 @@
             alert("Đã lưu cài đặt Mã QR Ngân hàng & Thông tin HLV Trưởng thành công!");
         };
 
-        // --- TẠO PHIẾU THÔNG BÁO HỌC PHÍ Ở TAB ADMIN ---
+        // --- TẠO PHIẾU THÔNG BÁO HỌC PHÍ (DÙNG CHO CẢ TAB ADMIN VÀ TAB KẾ TOÁN) ---
         function toCompactNoToneUpper(str) {
             if (!str) return "";
             return removeVietnameseTones(str).replace(/[^a-z0-9]/gi, '').toUpperCase();
         }
 
-        window.openTuitionNoticeModal = function(studentIdx) {
+        window.openTuitionNoticeModal = function(studentIdx, contextTab = null) {
             const st = students[studentIdx];
             if (!st) return;
             currentNoticeStudentIdx = studentIdx;
 
-            const adminMonth = document.getElementById('adminMonth').value || new Date().toISOString().slice(0, 7);
-            const unpaidMonths = getUnpaidMonthsList(st, adminMonth);
+            // Chỉ Admin mới thấy nút Cài đặt QR / HLV trong cửa sổ Phiếu báo
+            const btnSettingModal = document.getElementById('btnOpenPaymentSettingsInModal');
+            if (btnSettingModal) {
+                btnSettingModal.classList.toggle('hidden', currentRole !== 'Admin');
+            }
 
-            const monthSet = new Set([...unpaidMonths, adminMonth]);
+            const tabToUse = contextTab || activeTabId;
+            const baseMonthInputId = (tabToUse === 'hocphi') ? 'accMonth' : 'adminMonth';
+            const referenceMonth = document.getElementById(baseMonthInputId)?.value || new Date().toISOString().slice(0, 7);
+            const unpaidMonths = getUnpaidMonthsList(st, referenceMonth);
+
+            const monthSet = new Set([...unpaidMonths, referenceMonth]);
             currentNoticeCandidateMonths = Array.from(monthSet).sort();
 
             const container = document.getElementById('noticeMonthsCheckboxContainer');
             container.innerHTML = currentNoticeCandidateMonths.map(m => {
                 const [y, mm] = m.split('-');
-                const isPaid = st.tuition && st.tuition[m] && st.tuition[m].status === "Đã đóng";
-                const isCurrent = m === adminMonth;
-                const shouldCheck = !isPaid || unpaidMonths.length === 0;
+                const tStatus = (st.tuition && st.tuition[m] && st.tuition[m].status) ? st.tuition[m].status : "Chưa đóng";
+                const isPaid = tStatus === "Đã đóng";
+                const isTempBreakMonth = tStatus === "Tạm nghỉ";
+                const isCurrent = m === referenceMonth;
+                const shouldCheck = (!isPaid && !isTempBreakMonth) || unpaidMonths.length === 0;
                 const badgeStyle = isPaid
                     ? 'bg-green-50 text-green-800 border-green-300'
-                    : 'bg-red-50 text-red-700 border-red-300';
+                    : (isTempBreakMonth ? 'bg-orange-50 text-orange-800 border-orange-300' : 'bg-red-50 text-red-700 border-red-300');
+                const statusSuffix = isPaid ? '✓' : (isTempBreakMonth ? '(Tạm nghỉ)' : '(Nợ)');
 
                 return `
                     <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer select-none ${badgeStyle}">
                         <input type="checkbox" value="${m}" ${shouldCheck ? 'checked' : ''} onchange="window.updateTuitionNoticePreview()" class="notice-month-cb rounded text-red-600 focus:ring-0">
-                        <span>Tháng ${mm}/${y} ${isCurrent ? '(Hiện tại)' : ''} ${isPaid ? '✓' : '(Nợ)'}</span>
+                        <span>Tháng ${mm}/${y} ${isCurrent ? '(Tháng chọn)' : ''} ${statusSuffix}</span>
                     </label>
                 `;
             }).join('');
@@ -1317,14 +1335,16 @@
         window.quickSelectNoticeMonths = function(mode) {
             if (currentNoticeStudentIdx === null) return;
             const st = students[currentNoticeStudentIdx];
-            const adminMonth = document.getElementById('adminMonth').value;
+            const baseMonthInputId = (activeTabId === 'hocphi') ? 'accMonth' : 'adminMonth';
+            const referenceMonth = document.getElementById(baseMonthInputId)?.value;
             const checkboxes = document.querySelectorAll('.notice-month-cb');
 
             checkboxes.forEach(cb => {
                 const m = cb.value;
-                const isPaid = st.tuition && st.tuition[m] && st.tuition[m].status === "Đã đóng";
-                if (mode === 'current') cb.checked = (m === adminMonth);
-                else if (mode === 'debt') cb.checked = !isPaid;
+                const tStatus = (st.tuition && st.tuition[m] && st.tuition[m].status) ? st.tuition[m].status : "Chưa đóng";
+                const isDebt = (tStatus !== "Đã đóng" && tStatus !== "Tạm nghỉ");
+                if (mode === 'current') cb.checked = (m === referenceMonth);
+                else if (mode === 'debt') cb.checked = isDebt;
                 else cb.checked = true;
             });
             window.updateTuitionNoticePreview();
@@ -1412,7 +1432,6 @@
                 useCORS: true,
                 logging: false,
                 onclone: (clonedDoc) => {
-                    // Căn chỉnh bù trừ baseline của html2canvas để chữ nằm ngay chính giữa ô màu đỏ (Tháng thông báo & Nội dung CK)
                     const pillTexts = clonedDoc.querySelectorAll('.month-pill-text');
                     pillTexts.forEach(el => {
                         el.style.position = 'relative';
@@ -1737,11 +1756,19 @@
             `;
         }
 
-        function renderStudentContactBox(student) {
+        function renderStudentContactBox(student, noticeIndex = null) {
+            const noticeBtnHtml = noticeIndex !== null ? `
+                <div class="mt-2 pt-1.5 border-t border-dashed border-gray-200">
+                    <button onclick="window.openTuitionNoticeModal(${noticeIndex}, 'hocphi')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-2.5 py-1.5 rounded-lg shadow-sm transition inline-flex items-center gap-1">
+                        🧾 Tạo phiếu báo
+                    </button>
+                </div>
+            ` : '';
             return `
                 <div class="text-sm font-bold text-gray-800">${student.belt || 'Cấp 10'}</div>
                 <div class="text-xs mt-1 font-bold text-blue-600">CLB: ${student.club || 'Chưa phân CLB'}</div>
                 <div class="text-xs text-gray-600 mt-1">PH: ${student.parentName || 'Chưa cập nhật'} (${student.parentRole || '...'})<br>SĐT: ${student.phone || 'Chưa có'}</div>
+                ${noticeBtnHtml}
             `;
         }
 
@@ -1795,6 +1822,7 @@
             }, 80);
         };
 
+        // --- HÀM LẤY DANH SÁCH THÁNG NỢ: NẾU THÁNG ĐÓ CHỌN "TẠM NGHỈ" HOẶC "ĐÃ ĐÓNG" THÌ KHÔNG TÍNH NỢ ---
         function getUnpaidMonthsList(student, targetEndMonth) {
             const now = new Date();
             const currentRealMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -1812,8 +1840,10 @@
             while ((curY < endY || (curY === endY && curM <= endM)) && safetyCounter < 120) {
                 safetyCounter++;
                 const mStr = `${curY}-${String(curM).padStart(2, '0')}`;
-                const isPaid = student.tuition && student.tuition[mStr] && student.tuition[mStr].status === "Đã đóng";
-                if (!isPaid) unpaidMonths.push(mStr);
+                const mStatus = (student.tuition && student.tuition[mStr] && student.tuition[mStr].status) ? student.tuition[mStr].status : "Chưa đóng";
+                if (mStatus !== "Đã đóng" && mStatus !== "Tạm nghỉ") {
+                    unpaidMonths.push(mStr);
+                }
                 if (++curM > 12) { curM = 1; curY++; }
             }
             return unpaidMonths;
@@ -1823,10 +1853,12 @@
             if (!filterMode || filterMode === 'All') return true;
 
             const isQuit = getLatestStatus(student) === 'Nghỉ luôn';
-            const isPaidMonth = Boolean(student.tuition && student.tuition[targetMonth] && student.tuition[targetMonth].status === "Đã đóng");
+            const monthStatus = (student.tuition && student.tuition[targetMonth] && student.tuition[targetMonth].status) ? student.tuition[targetMonth].status : "Chưa đóng";
+            const isPaidMonth = monthStatus === "Đã đóng";
+            const isTempBreakMonth = monthStatus === "Tạm nghỉ";
 
             if (filterMode === 'unpaid_month') {
-                if (isQuit) return false;
+                if (isQuit || isTempBreakMonth) return false;
                 if (student.startDate && student.startDate.length >= 7 && student.startDate.slice(0, 7) > targetMonth) return false;
                 return !isPaidMonth;
             }
@@ -1909,10 +1941,14 @@
             }
             const { wb, selectedDate } = generateHLVWorkbook(true);
             const filterClub = document.getElementById('filterClub').value;
+            const filterBelt = document.getElementById('filterBelt').value;
             const filterStatus = document.getElementById('filterStatus').value;
             const filterExam = document.getElementById('filterExam').value;
 
             let slugParts = ["DS_HLV"];
+            if (filterBelt !== 'All') {
+                slugParts.push(removeVietnameseTones(filterBelt).replace(/\s+/g, '_').toUpperCase());
+            }
             if (filterExam !== 'All') {
                 slugParts.push(removeVietnameseTones(filterExam).replace(/\s+/g, '_').toUpperCase());
             }
@@ -2007,7 +2043,8 @@
                     }
 
                     const t = (st.tuition && st.tuition[adminMonth]) ? st.tuition[adminMonth] : null;
-                    const isPaid = t && t.status === "Đã đóng";
+                    const monthFeeStatus = (t && t.status) ? t.status : "Chưa đóng";
+                    const isPaid = monthFeeStatus === "Đã đóng";
                     const unpaidList = getUnpaidMonthsList(st, adminMonth).map(m => {
                         const [y, mm] = m.split('-');
                         return `Tháng ${mm}/${y}`;
@@ -2027,7 +2064,7 @@
                         st.phone || "",
                         getLatestStatus(st),
                         daysAttended,
-                        isPaid ? "Đã đóng" : "Chưa đóng",
+                        monthFeeStatus,
                         (isPaid && t.amount) ? formatNumberInput(t.amount) : "",
                         (isPaid && t.date) ? t.date : "",
                         unpaidList || "Đã đóng đủ",
@@ -2096,8 +2133,8 @@
                 if (!st) return;
 
                 const t = (st.tuition && st.tuition[targetMonth]) ? st.tuition[targetMonth] : null;
-                const isPaid = t && t.status === "Đã đóng";
-                const statusStr = isPaid ? "Đã đóng" : "Chưa đóng";
+                const statusStr = (t && t.status) ? t.status : "Chưa đóng";
+                const isPaid = statusStr === "Đã đóng";
                 const amountStr = (isPaid && t.amount) ? formatNumberInput(t.amount) : "";
                 const datePaidStr = (isPaid && t.date) ? formatDate(t.date) : "";
 
@@ -2181,7 +2218,13 @@
                         const mm = String(m).padStart(2, '0');
                         const mKey = `${year}-${mm}`;
                         const t = (st.tuition && st.tuition[mKey]) ? st.tuition[mKey] : null;
-                        rowArr.push((t && t.status === "Đã đóng" && t.amount) ? formatNumberInput(t.amount) : "");
+                        if (t && t.status === "Tạm nghỉ") {
+                            rowArr.push("Tạm nghỉ");
+                        } else if (t && t.status === "Đã đóng" && t.amount) {
+                            rowArr.push(formatNumberInput(t.amount));
+                        } else {
+                            rowArr.push("");
+                        }
 
                         if ([3, 6, 9, 12].includes(m)) {
                             const ef = (st.examFee && st.examFee[mKey]) ? st.examFee[mKey] : null;
@@ -2305,7 +2348,7 @@
                 step1Title.innerText = "Bước 1: Tải File Mẫu Kế Toán (12 Tháng + 4 Kỳ Thi)";
                 step1Desc.innerHTML = `File tải về có <b>đầy đủ thông tin võ sinh</b> + 12 Tháng học phí + 4 Kỳ lệ phí thi. Những tháng <b>Chưa đóng</b> để trống để Kế toán nhập số tiền.`;
                 btnTemplate.innerText = "📥 1. Tải File Mẫu Kế Toán (12 Tháng)";
-                step2Desc.innerHTML = `Điền số tiền (VD: <b>500.000</b>) vào các ô trống của tháng đã đóng rồi tải file lên hệ thống.`;
+                step2Desc.innerHTML = `Điền số tiền (VD: <b>500.000</b>) hoặc chữ <b>"Tạm nghỉ"</b> vào các ô của tháng tương ứng rồi tải file lên hệ thống.`;
             } else {
                 titleEl.innerText = "📥 Nhập Danh Sách Excel (Tab Tổng Hợp Admin)";
                 step1Title.innerText = "Bước 1: Tải File Mẫu Tổng Hợp Admin";
@@ -2339,6 +2382,9 @@
             const str = cellVal.toString().trim();
             if (!str) return null;
             const norm = removeVietnameseTones(str);
+            if (norm.includes("tam nghi")) {
+                return { status: "Tạm nghỉ", amount: "", date: "", enteredByRole: "" };
+            }
             if (norm.includes("chua") || norm === "0" || norm === "khong") {
                 return { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
             }
@@ -2949,7 +2995,7 @@
                     const t = (st.tuition && st.tuition[m]) ? st.tuition[m] : { status: "Chưa đóng", amount: "" };
                     if (t.status === "Đã đóng") {
                         paidMoneySum += parseRawNumber(t.amount);
-                    } else {
+                    } else if (t.status !== "Tạm nghỉ") {
                         unpaidStudentCount++;
                     }
                 }
@@ -3045,8 +3091,12 @@
 
             if (field === 'status' && el) {
                 const isPaid = value === "Đã đóng";
+                const isTempBreakMonth = value === "Tạm nghỉ";
                 const paidStyle = type === 'tuition' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-purple-100 text-purple-700 border-purple-300';
-                el.className = `text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? paidStyle : 'bg-yellow-100 text-yellow-700 border-yellow-300'}`;
+                const statusStyle = isPaid
+                    ? paidStyle
+                    : (isTempBreakMonth ? 'bg-orange-100 text-orange-800 border-orange-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300');
+                el.className = `text-xs border rounded px-2 py-1 font-bold outline-none ${statusStyle}`;
             }
 
             refreshTuitionColumnTotals();
@@ -3103,6 +3153,7 @@
             const selectedDate = document.getElementById('currentDate').value;
             const searchName = document.getElementById('searchHLVName').value;
             const filterClub = document.getElementById('filterClub').value;
+            const filterBelt = document.getElementById('filterBelt') ? document.getElementById('filterBelt').value : 'All';
             const filterStatus = document.getElementById('filterStatus').value;
             const filterExam = document.getElementById('filterExam').value;
 
@@ -3117,6 +3168,7 @@
                 const index = c.originalIndex;
                 const student = students[index];
                 if (!student || (filterClub !== 'All' && student.club !== filterClub)) continue;
+                if (filterBelt !== 'All' && (student.belt || 'Cấp 10') !== filterBelt) continue;
 
                 const dayData = getDailyData(student, selectedDate);
                 if ((filterStatus !== 'All' && dayData.status !== filterStatus) || (filterExam !== 'All' && dayData.examStatus !== filterExam)) continue;
@@ -3296,13 +3348,17 @@
                 let rowHtml = `<tr class="fast-row ${rowBgClass}">
                     <td class="sticky-col-1 px-2 py-3 text-center align-top text-sm font-extrabold text-gray-500 border-b border-gray-100">${stt++}</td>
                     <td class="sticky-col-2 px-3 py-3 border-l border-b border-green-200 align-top">${renderStudentProfileBox(student, index, false)}</td>
-                    <td class="px-4 py-3 border-l border-green-200 align-top">${renderStudentContactBox(student)}</td>`;
+                    <td class="px-4 py-3 border-l border-green-200 align-top">${renderStudentContactBox(student, index)}</td>`;
 
                 for (let idx = 0; idx < monthList.length; idx++) {
                     const m = monthList[idx];
                     const hasTuitionRecord = Boolean(student.tuition && student.tuition[m]);
                     const t = hasTuitionRecord ? student.tuition[m] : { status: "Chưa đóng", amount: "", date: "", enteredByRole: "" };
                     const isPaid = t.status === "Đã đóng";
+                    const isTempBreakMonth = t.status === "Tạm nghỉ";
+                    const selectColorClass = isPaid
+                        ? 'bg-green-100 text-green-700 border-green-300'
+                        : (isTempBreakMonth ? 'bg-orange-100 text-orange-800 border-orange-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300');
 
                     const displayAmount = (hasTuitionRecord && t.amount && (t.enteredByRole || isPaid || t.date)) ? formatNumberInput(t.amount) : "";
                     const isAdminEntered = (t.enteredByRole === 'Admin' && displayAmount !== "");
@@ -3321,9 +3377,10 @@
                                 <input type="date" value="${t.date || ''}" oninput="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'date', this.value)" class="w-32 border border-gray-300 rounded px-1.5 py-1 text-xs ${isQuit ? 'bg-transparent' : 'bg-white'}">
                             </div>
                             <div class="flex justify-end mt-0.5">
-                                <select onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${isPaid ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300'}">
-                                    <option ${isPaid ? 'selected' : ''}>Đã đóng</option>
-                                    <option ${!isPaid ? 'selected' : ''}>Chưa đóng</option>
+                                <select onchange="window.updateFeeRecord('tuition', ${index}, '${m}', 'status', this.value, this)" class="text-xs border rounded px-2 py-1 font-bold outline-none ${selectColorClass}">
+                                    <option value="Đã đóng" ${isPaid ? 'selected' : ''}>Đã đóng</option>
+                                    <option value="Chưa đóng" ${(!isPaid && !isTempBreakMonth) ? 'selected' : ''}>Chưa đóng</option>
+                                    <option value="Tạm nghỉ" ${isTempBreakMonth ? 'selected' : ''}>Tạm nghỉ</option>
                                 </select>
                             </div>
                         </div>
@@ -3404,9 +3461,12 @@
                 }
 
                 const t = (student.tuition && student.tuition[adminMonth]) ? student.tuition[adminMonth] : null;
-                const feeStatusHTML = (t && t.status === "Đã đóng")
-                    ? `<span class="text-green-600 font-bold">Đã đóng (${t.amount ? formatMoney(t.amount) : 'Chưa nhập số tiền'})</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`
-                    : `<span class="text-yellow-600 font-bold">Chưa đóng</span>`;
+                let feeStatusHTML = `<span class="text-yellow-600 font-bold">Chưa đóng</span>`;
+                if (t && t.status === "Đã đóng") {
+                    feeStatusHTML = `<span class="text-green-600 font-bold">Đã đóng (${t.amount ? formatMoney(t.amount) : 'Chưa nhập số tiền'})</span><br><span class="text-xs text-gray-500">Thu ngày: ${formatDate(t.date)}</span>`;
+                } else if (t && t.status === "Tạm nghỉ") {
+                    feeStatusHTML = `<span class="text-orange-600 font-bold">Tạm nghỉ (Không tính nợ)</span>`;
+                }
 
                 const unpaidMonths = getUnpaidMonthsList(student, adminMonth);
                 let unpaidHTML = '';
@@ -3430,7 +3490,7 @@
                         </td>
                         <td class="px-4 py-3 border-l border-gray-200 align-top ${unpaidMonths.length > 0 && !isQuit && !isTempBreak && !student.isDuplicate5 ? 'bg-red-50' : ''}">${unpaidHTML}</td>
                         <td class="px-4 py-3 border-l border-gray-200 text-center align-middle whitespace-nowrap">
-                            <button onclick="window.openTuitionNoticeModal(${index})" class="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-3 py-2 rounded-lg shadow transition inline-flex items-center gap-1">
+                            <button onclick="window.openTuitionNoticeModal(${index}, 'admin')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-3 py-2 rounded-lg shadow transition inline-flex items-center gap-1">
                                 🧾 Tạo phiếu báo
                             </button>
                             ${unpaidMonths.length > 0 ? `<div class="text-xs font-bold text-red-600 mt-1">Nợ ${unpaidMonths.length} tháng</div>` : `<div class="text-xs text-green-600 font-medium mt-1">Báo tháng hiện tại</div>`}
@@ -3523,6 +3583,10 @@
         function initApp() {
             const optionsHTML = beltLevels.map(belt => `<option value="${belt}">${belt}</option>`).join('');
             ['beltSelect', 'inpBelt', 'editBelt'].forEach(id => document.getElementById(id).innerHTML = optionsHTML);
+            const filterBeltEl = document.getElementById('filterBelt');
+            if (filterBeltEl) {
+                filterBeltEl.innerHTML = `<option value="All">- Tất cả cấp đai -</option>` + optionsHTML;
+            }
             
             const now = new Date();
             const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
