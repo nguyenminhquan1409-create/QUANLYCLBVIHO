@@ -21,6 +21,23 @@
         table { border-collapse: separate; border-spacing: 0; }
         .fast-row { contain: layout style; }
         
+        /* Chữ ký ở Header dưới cụm Xin chào / Đăng xuất: canh phải tuyệt đối để chữ 'n' (Quân) thẳng hàng với chữ 't' (Đăng xuất) */
+        .header-signature-right {
+            font-size: 9.5px;
+            line-height: 1.15;
+            font-weight: 700;
+            color: #4b5563;
+            text-align: right;
+            margin-top: 3px;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            white-space: nowrap;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: geometricPrecision;
+            user-select: none;
+        }
+
         /* Luôn canh chỉnh ảnh nằm chính giữa khung */
         .avatar-center {
             object-fit: cover;
@@ -214,9 +231,15 @@
 
                 <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5 text-center font-medium"></div>
 
-                <button type="submit" id="btnSubmitLogin" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200">
-                    ĐĂNG NHẬP HỆ THỐNG
-                </button>
+                <div>
+                    <button type="submit" id="btnSubmitLogin" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200">
+                        ĐĂNG NHẬP HỆ THỐNG
+                    </button>
+                    <!-- CHỮ KÝ NẰM DƯỚI Ô MÀU ĐỎ ĐĂNG NHẬP HỆ THỐNG, CANH GIỮA, KHÔNG GIÃN -->
+                    <div class="text-center text-xs font-bold text-gray-600 mt-3 select-none">
+                        Design by Nguyễn Minh Quân - 0937.707.001
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -225,7 +248,7 @@
     <header class="bg-white shadow-sm border-b border-red-600 w-full flex-shrink-0">
         <div class="w-full px-4 sm:px-6 flex justify-between items-center h-16">
             <div class="flex items-center gap-3">
-                <img id="headerLogoImg" src="" onclick="window.triggerLogoUpload()" title="Logo CLB Vĩ Hồ" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain">
+                <img id="headerLogoImg" src="" onclick="window.triggerLogoUpload()" title="Logo CLB Vĩ Hồ" alt="Logo Vĩ Hồ" class="h-12 w-auto object-contain flex-shrink-0">
                 <div class="font-extrabold text-xl sm:text-2xl text-red-600 tracking-wide">TAEKWONDO VĨ HỒ</div>
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
@@ -238,8 +261,15 @@
                     📦 DỮ LIỆU TỔNG
                 </button>
                 <span id="studentCountBadge" class="hidden sm:inline-block text-xs font-bold bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full">0 võ sinh</span>
-                <span id="welcomeUser" class="text-sm font-bold text-gray-700">Chưa đăng nhập</span>
-                <button onclick="logout()" class="text-sm text-red-600 font-medium hover:underline border-l pl-3 ml-1">Đăng xuất</button>
+                
+                <!-- KHU VỰC XIN CHÀO + ĐĂNG XUẤT VÀ CHỮ KÝ NẰM BÊN DƯỚI (CHỮ 'n' CỦA QUÂN THẲNG VỚI CHỮ 't' CỦA ĐĂNG XUẤT) -->
+                <div class="inline-flex flex-col items-end justify-center">
+                    <div class="flex items-center leading-tight">
+                        <span id="welcomeUser" class="text-sm font-bold text-gray-700">Chưa đăng nhập</span>
+                        <button onclick="logout()" class="text-sm text-red-600 font-medium hover:underline border-l border-gray-300 pl-3 ml-2 pr-0 mr-0">Đăng xuất</button>
+                    </div>
+                    <div class="header-signature-right">Design By Nguyễn Minh Quân</div>
+                </div>
             </div>
         </div>
     </header>
@@ -618,7 +648,7 @@
             <div class="p-4 sm:p-6 overflow-auto flex-1 bg-gray-200 flex justify-center items-start">
                 <div id="printableTuitionSlip" class="bg-white border-4 border-red-600 rounded-2xl p-7 shadow-xl">
                     
-                    <!-- PHẦN 1: HEADER CLB & LOGO (1 HÀNG NGANG KHÔNG XUỐNG DÒNG) -->
+                    <!-- PHẦN 1: HEADER CLB & LOGO (1 HÀNG NGANG KHÔNG XUỐNG DÒNG, ĐÃ XÓA CHỮ KÝ THEO YÊU CẦU) -->
                     <div class="flex items-center gap-5 border-b-2 border-red-600 pb-5 mb-5">
                         <div style="width: 88px; height: 88px;" class="flex items-center justify-center bg-white rounded-xl p-1 flex-shrink-0">
                             <img id="slipClubLogo" src="" alt="Logo CLB" class="slip-img-preserve" style="max-width: 84px; max-height: 84px;">
